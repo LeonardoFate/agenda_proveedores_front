@@ -1,0 +1,207 @@
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="px-6 py-8 sm:p-10">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold text-gray-900">
+            Registro de Proveedor
+          </h2>
+          <p class="mt-2 text-sm text-gray-600">
+            Complete el formulario para registrarse como proveedor
+          </p>
+        </div>
+
+        <form class="mt-8 space-y-6" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+          <!-- Información de Usuario -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 border-b pb-2">Información de Usuario</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 mt-4">
+              <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Nombre de usuario</label>
+                <input
+                  type="text"
+                  id="username"
+                  formControlName="username"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('username')?.invalid && registerForm.get('username')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('username')?.errors?.['required'] && registerForm.get('username')?.touched">
+                  El nombre de usuario es requerido
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('username')?.errors?.['minlength'] && registerForm.get('username')?.touched">
+                  El nombre de usuario debe tener al menos 4 caracteres
+                </div>
+              </div>
+
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('email')?.errors?.['required'] && registerForm.get('email')?.touched">
+                  El email es requerido
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('email')?.errors?.['email'] && registerForm.get('email')?.touched">
+                  Ingrese un email válido
+                </div>
+              </div>
+
+              <div>
+                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+                <input
+                  type="text"
+                  id="nombre"
+                  formControlName="nombre"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('nombre')?.errors?.['required'] && registerForm.get('nombre')?.touched">
+                  El nombre es requerido
+                </div>
+              </div>
+
+              <div>
+                <label for="apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+                <input
+                  type="text"
+                  id="apellido"
+                  formControlName="apellido"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('apellido')?.errors?.['required'] && registerForm.get('apellido')?.touched">
+                  El apellido es requerido
+                </div>
+              </div>
+
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <input
+                  type="password"
+                  id="password"
+                  formControlName="password"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('password')?.errors?.['required'] && registerForm.get('password')?.touched">
+                  La contraseña es requerida
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('password')?.errors?.['minlength'] && registerForm.get('password')?.touched">
+                  La contraseña debe tener al menos 6 caracteres
+                </div>
+              </div>
+
+              <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('confirmPassword')?.errors?.['required'] && registerForm.get('confirmPassword')?.touched">
+                  Confirme su contraseña
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('confirmPassword')?.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched">
+                  Las contraseñas no coinciden
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de Empresa -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 border-b pb-2">Información de Empresa</h3>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 mt-4">
+              <div>
+                <label for="nombreEmpresa" class="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
+                <input
+                  type="text"
+                  id="nombreEmpresa"
+                  formControlName="nombreEmpresa"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('nombreEmpresa')?.invalid && registerForm.get('nombreEmpresa')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('nombreEmpresa')?.errors?.['required'] && registerForm.get('nombreEmpresa')?.touched">
+                  El nombre de la empresa es requerido
+                </div>
+              </div>
+
+              <div>
+                <label for="ruc" class="block text-sm font-medium text-gray-700">RUC</label>
+                <input
+                  type="text"
+                  id="ruc"
+                  formControlName="ruc"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('ruc')?.invalid && registerForm.get('ruc')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('ruc')?.errors?.['required'] && registerForm.get('ruc')?.touched">
+                  El RUC es requerido
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('ruc')?.errors?.['minlength'] && registerForm.get('ruc')?.touched">
+                  El RUC debe tener al menos 10 caracteres
+                </div>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label for="direccion" class="block text-sm font-medium text-gray-700">Dirección</label>
+                <input
+                  type="text"
+                  id="direccion"
+                  formControlName="direccion"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('direccion')?.invalid && registerForm.get('direccion')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('direccion')?.errors?.['required'] && registerForm.get('direccion')?.touched">
+                  La dirección es requerida
+                </div>
+              </div>
+
+              <div>
+                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input
+                  type="text"
+                  id="telefono"
+                  formControlName="telefono"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  [ngClass]="{'border-red-500': registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched}"
+                />
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('telefono')?.errors?.['required'] && registerForm.get('telefono')?.touched">
+                  El teléfono es requerido
+                </div>
+                <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('telefono')?.errors?.['pattern'] && registerForm.get('telefono')?.touched">
+                  Ingrese un número de teléfono válido
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensajes de error/éxito -->
+          <div class="text-center" *ngIf="errorMessage || successMessage">
+            <div class="text-red-500 text-sm" *ngIf="errorMessage">{{ errorMessage }}</div>
+            <div class="text-green-500 text-sm" *ngIf="successMessage">{{ successMessage }}</div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex justify-between items-center pt-4">
+            <a routerLink="/login" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+              ¿Ya tiene cuenta? Inicie sesión
+            </a>
+
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ isLoading ? 'Registrando...' : 'Registrarse' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

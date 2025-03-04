@@ -1,0 +1,144 @@
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">
+        {{ isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}
+      </h1>
+      <p class="text-gray-600">
+        {{ isEditing ? 'Modifique la información del usuario' : 'Complete el formulario para crear un nuevo usuario' }}
+      </p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading" class="bg-white shadow-md rounded-lg p-6">
+      <!-- Mensajes de éxito/error -->
+      <div *ngIf="errorMessage" class="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="mb-4 p-4 text-green-700 bg-green-100 rounded-md">
+        {{ successMessage }}
+      </div>
+
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Username -->
+          <div>
+            <label for="username" class="block text-sm font-medium text-gray-700">Nombre de usuario</label>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              [class.border-red-500]="getControlError('username')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+            <p *ngIf="getControlError('username')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('username') }}
+            </p>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              [class.border-red-500]="getControlError('email')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+            <p *ngIf="getControlError('email')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('email') }}
+            </p>
+          </div>
+
+          <!-- Nombre -->
+          <div>
+            <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input
+              type="text"
+              id="nombre"
+              formControlName="nombre"
+              [class.border-red-500]="getControlError('nombre')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+            <p *ngIf="getControlError('nombre')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('nombre') }}
+            </p>
+          </div>
+
+          <!-- Apellido -->
+          <div>
+            <label for="apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+            <input
+              type="text"
+              id="apellido"
+              formControlName="apellido"
+              [class.border-red-500]="getControlError('apellido')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+            <p *ngIf="getControlError('apellido')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('apellido') }}
+            </p>
+          </div>
+
+          <!-- Contraseña -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">
+              {{ isEditing ? 'Contraseña (dejar en blanco para mantener la actual)' : 'Contraseña' }}
+            </label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              [class.border-red-500]="getControlError('password')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+            <p *ngIf="getControlError('password')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('password') }}
+            </p>
+          </div>
+
+          <!-- Rol -->
+          <div>
+            <label for="rol" class="block text-sm font-medium text-gray-700">Rol</label>
+            <select
+              id="rol"
+              formControlName="rol"
+              [class.border-red-500]="getControlError('rol')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option value="">Seleccione un rol</option>
+              <option value="ADMIN">Administrador</option>
+              <option value="GUARDIA">Guardia</option>
+              <option value="AGENTE">Agente</option>
+              <option value="PROVEEDOR">Proveedor</option>
+            </select>
+            <p *ngIf="getControlError('rol')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('rol') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="mt-8 flex justify-end">
+          <button
+            type="button"
+            (click)="cancelForm()"
+            class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="loading"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+          >
+            {{ isEditing ? 'Actualizar Usuario' : 'Crear Usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>

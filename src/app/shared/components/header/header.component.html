@@ -1,0 +1,328 @@
+<header class="bg-white shadow">
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between h-16">
+        <!-- Logo y navegación principal -->
+        <div class="flex">
+          <div class="flex-shrink-0 flex items-center">
+            <a [routerLink]="'/'" class="flex items-center">
+              <img class="h-8 w-auto" src="../../../../assets/logo.png" alt="Logo Agendamiento">
+              <span class="ml-2 text-xl font-bold text-primary-600"></span>
+            </a>
+          </div>
+
+          <!-- Navegación de escritorio -->
+          <nav class="hidden md:ml-6 md:flex md:space-x-8" *ngIf="currentUser">
+            <a
+              [routerLink]="getDashboardLink()"
+              routerLinkActive="border-primary-500 text-gray-900"
+              [routerLinkActiveOptions]="{exact: true}"
+              class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+            >
+              Dashboard
+            </a>
+
+            <!-- Links específicos por rol -->
+            <ng-container [ngSwitch]="currentUser?.rol">
+              <!-- Admin -->
+              <ng-container *ngSwitchCase="'ADMIN'">
+                <a
+                  routerLink="/admin/users"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Usuarios
+                </a>
+                <a
+                  routerLink="/admin/areas"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Áreas
+                </a>
+                <a
+                  routerLink="/admin/reports"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Reportes
+                </a>
+              </ng-container>
+
+              <!-- Guardia -->
+              <ng-container *ngSwitchCase="'GUARDIA'">
+                <a
+                  routerLink="/guard/reservations"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Reservas
+                </a>
+                <a
+                  routerLink="/guard/entries"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Entradas/Salidas
+                </a>
+              </ng-container>
+
+              <!-- Agente -->
+              <ng-container *ngSwitchCase="'AGENTE'">
+                <a
+                  routerLink="/agent/docks"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Andenes
+                </a>
+                <a
+                  routerLink="/agent/receptions"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Recepciones
+                </a>
+              </ng-container>
+
+              <!-- Proveedor -->
+              <ng-container *ngSwitchCase="'PROVEEDOR'">
+                <a
+                  routerLink="/provider/schedule"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Agendar
+                </a>
+                <a
+                  routerLink="/provider/my-reservations"
+                  routerLinkActive="border-primary-500 text-gray-900"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Mis Reservas
+                </a>
+              </ng-container>
+            </ng-container>
+          </nav>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex items-center">
+          <div class="flex-shrink-0 relative">
+            <div *ngIf="currentUser; else loginButton">
+              <button
+                (click)="toggleUserMenu()"
+                type="button"
+                class="flex bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                <span class="sr-only">Ver perfil</span>
+                <div class="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
+                  {{ currentUser.username.charAt(0).toUpperCase() }}
+                </div>
+              </button>
+
+              <!-- Menú de usuario -->
+              <div
+                *ngIf="isUserMenuOpen"
+                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="user-menu"
+              >
+                <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <div class="font-medium">{{ currentUser.username }}</div>
+                  <div class="text-gray-500">{{ getRoleName(currentUser.rol) }}</div>
+                </div>
+                <a
+                  [routerLink]="'/profile'"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  (click)="closeMenus()"
+                >
+                  Mi Perfil
+                </a>
+                <button
+                  (click)="logout()"
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            </div>
+
+            <ng-template #loginButton>
+              <a
+                routerLink="/login"
+                class="ml-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Iniciar Sesión
+              </a>
+            </ng-template>
+          </div>
+
+          <!-- Botón de menú móvil -->
+          <div class="-mr-2 flex items-center md:hidden">
+            <button
+              (click)="toggleMenu()"
+              type="button"
+              class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+              aria-expanded="false"
+            >
+              <span class="sr-only">Abrir menú principal</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  [attr.d]="isMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menú móvil -->
+    <div *ngIf="isMenuOpen" class="md:hidden">
+      <div class="pt-2 pb-3 space-y-1" *ngIf="currentUser">
+        <a
+          [routerLink]="getDashboardLink()"
+          routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+          [routerLinkActiveOptions]="{exact: true}"
+          class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+          (click)="closeMenus()"
+        >
+          Dashboard
+        </a>
+
+        <!-- Links específicos por rol (móvil) -->
+        <ng-container [ngSwitch]="currentUser?.rol">
+          <!-- Admin -->
+          <ng-container *ngSwitchCase="'ADMIN'">
+            <a
+              routerLink="/admin/users"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Usuarios
+            </a>
+            <a
+              routerLink="/admin/areas"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Áreas
+            </a>
+            <a
+              routerLink="/admin/reports"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Reportes
+            </a>
+          </ng-container>
+
+          <!-- Guardia -->
+          <ng-container *ngSwitchCase="'GUARDIA'">
+            <a
+              routerLink="/guard/reservations"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Reservas
+            </a>
+            <a
+              routerLink="/guard/entries"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Entradas/Salidas
+            </a>
+          </ng-container>
+
+          <!-- Agente -->
+          <ng-container *ngSwitchCase="'AGENTE'">
+            <a
+              routerLink="/agent/docks"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Andenes
+            </a>
+            <a
+              routerLink="/agent/receptions"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Recepciones
+            </a>
+          </ng-container>
+
+          <!-- Proveedor -->
+          <ng-container *ngSwitchCase="'PROVEEDOR'">
+            <a
+              routerLink="/provider/schedule"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Agendar
+            </a>
+            <a
+              routerLink="/provider/my-reservations"
+              routerLinkActive="bg-primary-50 border-primary-500 text-primary-700"
+              class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              (click)="closeMenus()"
+            >
+              Mis Reservas
+            </a>
+          </ng-container>
+        </ng-container>
+      </div>
+
+      <!-- Información de usuario (móvil) -->
+      <div class="pt-4 pb-3 border-t border-gray-200" *ngIf="currentUser">
+        <div class="flex items-center px-4">
+          <div class="flex-shrink-0">
+            <div class="h-10 w-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
+              {{ currentUser.username.charAt(0).toUpperCase() }}
+            </div>
+          </div>
+          <div class="ml-3">
+            <div class="text-base font-medium text-gray-800">{{ currentUser.username }}</div>
+            <div class="text-sm font-medium text-gray-500">{{ getRoleName(currentUser.rol) }}</div>
+          </div>
+        </div>
+        <div class="mt-3 space-y-1">
+          <a
+            routerLink="/profile"
+            class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+            (click)="closeMenus()"
+          >
+            Mi Perfil
+          </a>
+          <button
+            (click)="logout()"
+            class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>

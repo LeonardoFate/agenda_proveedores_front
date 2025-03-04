@@ -1,0 +1,123 @@
+<div class="bg-gray-50 min-h-screen">
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading && currentUser" class="py-8">
+      <!-- Encabezado de bienvenida -->
+      <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">
+          Bienvenido, {{ currentUser.username }}
+        </h1>
+        <p class="text-gray-600">
+          Panel de {{ getRoleName(currentUser.rol) }} | {{ currentDate | date:'EEEE, d MMMM yyyy' }}
+        </p>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Resumen</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Reservas -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
+                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Total Reservas</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.totalReservations }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pendientes -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-yellow-100 p-3">
+                <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Pendientes</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.pendingReservations }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- En Progreso -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-purple-100 p-3">
+                <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">En Progreso</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.inProgressReservations }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completadas -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Completadas</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.completedReservations }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Módulos (cards de acceso rápido) -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Acceso Rápido</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div *ngFor="let module of getModuleRoutes()" class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-primary-100 p-3">
+                  <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-5">
+                  <h3 class="text-lg font-medium text-gray-900">{{ module.title }}</h3>
+                  <p class="text-sm text-gray-500">{{ module.description }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 p-4">
+              <a [routerLink]="module.route" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                <span>Ir a {{ module.title }}</span>
+                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje si no hay usuario -->
+    <div *ngIf="!loading && !currentUser" class="text-center py-12">
+      <h1 class="text-2xl font-bold text-gray-900 mb-4">Acceso Restringido</h1>
+      <p class="text-gray-600 mb-6">Debe iniciar sesión para acceder al dashboard.</p>
+      <a routerLink="/login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+        Iniciar Sesión
+      </a>
+    </div>
+  </div>

@@ -1,0 +1,108 @@
+<!-- src/app/features/admin/areas/anden-form.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">
+        {{ isEditing ? 'Editar Andén' : 'Crear Nuevo Andén' }}
+      </h1>
+      <p class="text-gray-600" *ngIf="area">
+        {{ isEditing ? 'Modifique la información del andén' : 'Complete el formulario para crear un nuevo andén' }}
+        en el área "{{ area.nombre }}"
+      </p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading" class="bg-white shadow-md rounded-lg p-6">
+      <!-- Mensajes de éxito/error -->
+      <div *ngIf="errorMessage" class="mb-4 p-4 text-red-700 bg-red-100 rounded-md">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="mb-4 p-4 text-green-700 bg-green-100 rounded-md">
+        {{ successMessage }}
+      </div>
+
+      <form [formGroup]="andenForm" (ngSubmit)="onSubmit()">
+        <div class="space-y-6">
+          <!-- Área (oculto si ya se seleccionó) -->
+          <input type="hidden" formControlName="areaId">
+
+          <!-- Número -->
+          <div>
+            <label for="numero" class="block text-sm font-medium text-gray-700">Número de Andén</label>
+            <input
+              type="number"
+              id="numero"
+              formControlName="numero"
+              [class.border-red-500]="getControlError('numero')"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              min="1"
+            >
+            <p *ngIf="getControlError('numero')" class="mt-1 text-sm text-red-600">
+              {{ getControlError('numero') }}
+            </p>
+          </div>
+
+          <!-- Estado -->
+          <div>
+            <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
+            <select
+              id="estado"
+              formControlName="estado"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option *ngFor="let estado of estadosAnden" [value]="estado">{{ estado }}</option>
+            </select>
+          </div>
+
+          <!-- Capacidad -->
+          <div>
+            <label for="capacidad" class="block text-sm font-medium text-gray-700">Capacidad (opcional)</label>
+            <input
+              type="text"
+              id="capacidad"
+              formControlName="capacidad"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              placeholder="Ej: 5 toneladas"
+            >
+          </div>
+
+          <!-- Exclusivo Contenedor -->
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input
+                id="exclusivoContenedor"
+                type="checkbox"
+                formControlName="exclusivoContenedor"
+                class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
+              >
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="exclusivoContenedor" class="font-medium text-gray-700">Exclusivo para Contenedores</label>
+              <p class="text-gray-500">Marque esta opción si el andén es exclusivo para la recepción de contenedores.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="mt-8 flex justify-end">
+          <button
+            type="button"
+            (click)="cancelForm()"
+            class="mr-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="loading"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+          >
+            {{ isEditing ? 'Actualizar Andén' : 'Crear Andén' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>

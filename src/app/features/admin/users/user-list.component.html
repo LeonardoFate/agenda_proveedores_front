@@ -1,0 +1,172 @@
+
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
+        <p class="text-gray-600">Administración de usuarios del sistema</p>
+      </div>
+      <div class="mt-4 sm:mt-0">
+        <a
+          routerLink="/admin/users/create"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Nuevo Usuario
+        </a>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading">
+      <!-- Filtros -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Búsqueda -->
+          <div>
+            <label for="search" class="block text-sm font-medium text-gray-700">Búsqueda</label>
+            <input
+              type="text"
+              id="search"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilters()"
+              placeholder="Buscar por nombre, email..."
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+          </div>
+
+          <!-- Filtro de Rol -->
+          <div>
+            <label for="role-filter" class="block text-sm font-medium text-gray-700">Filtrar por Rol</label>
+            <select
+              id="role-filter"
+              [(ngModel)]="roleFilter"
+              (ngModelChange)="applyFilters()"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option value="">Todos los roles</option>
+              <option value="ADMIN">Administrador</option>
+              <option value="GUARDIA">Guardia</option>
+              <option value="AGENTE">Agente</option>
+              <option value="PROVEEDOR">Proveedor</option>
+            </select>
+          </div>
+
+          <!-- Filtro de Estado -->
+          <div>
+            <label for="status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Estado</label>
+            <select
+              id="status-filter"
+              [(ngModel)]="statusFilter"
+              (ngModelChange)="applyFilters()"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option value="">Todos los estados</option>
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Usuarios -->
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Usuario
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Estado
+                </th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let user of filteredUsers">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
+                      {{ user.username.charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                      <div class="text-sm text-gray-500">{{ user.nombre }} {{ user.apellido }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ user.email }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    [ngClass]="{
+                      'bg-primary-100 text-primary-800': user.rol === 'ADMIN',
+                      'bg-yellow-100 text-yellow-800': user.rol === 'GUARDIA',
+                      'bg-pink-100 text-pink-800': user.rol === 'AGENTE',
+                      'bg-indigo-100 text-indigo-800': user.rol === 'PROVEEDOR'
+                    }"
+                  >
+                    {{ getRoleName(user.rol) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800': user.estado,
+                      'bg-red-100 text-red-800': !user.estado
+                    }"
+                  >
+                    {{ user.estado ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <a [routerLink]="['/admin/users/edit', user.id]" class="text-primary-600 hover:text-primary-900 mr-3">
+                    Editar
+                  </a>
+                  <button
+                    *ngIf="user.estado"
+                    (click)="changeUserStatus(user.id, false)"
+                    class="text-red-600 hover:text-red-900"
+                  >
+                    Desactivar
+                  </button>
+                  <button
+                    *ngIf="!user.estado"
+                    (click)="changeUserStatus(user.id, true)"
+                    class="text-green-600 hover:text-green-900"
+                  >
+                    Activar
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Mensaje de no hay resultados -->
+              <tr *ngIf="filteredUsers.length === 0">
+                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                  No se encontraron usuarios con los filtros aplicados.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
