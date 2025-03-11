@@ -60,11 +60,11 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./areas/anden-form.component').then(m => m.AndenFormComponent),
     canActivate: [authGuard],
     data: { requiredRole: 'ADMIN' }
+  },
+  {
+    path: 'reports',
+    loadComponent: () => import('./reports/report-dashboard.component').then(m => m.ReportDashboardComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'ADMIN' }
   }
-//   {
-//     path: 'reports',
-//     loadComponent: () => import('./reports/report-dashboard.component').then(m => m.ReportDashboardComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'ADMIN' }
-//   }
 ];

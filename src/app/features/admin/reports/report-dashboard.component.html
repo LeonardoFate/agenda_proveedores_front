@@ -1,0 +1,109 @@
+<!-- src/app/features/admin/reports/report-dashboard.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Reportes y Estadísticas</h1>
+      <p class="text-gray-600">Visualización y exportación de informes del sistema</p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mr-3"></div>
+        <span>Procesando datos...</span>
+      </div>
+    </div>
+
+    <!-- Filtros de fecha -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">Filtros de fecha</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="start-date" class="block text-sm font-medium text-gray-700">Fecha de inicio</label>
+          <input
+            type="date"
+            id="start-date"
+            [(ngModel)]="startDate"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+          >
+        </div>
+        <div>
+          <label for="end-date" class="block text-sm font-medium text-gray-700">Fecha de fin</label>
+          <input
+            type="date"
+            id="end-date"
+            [(ngModel)]="endDate"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Exportar reportes -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-700">Exportar reporte</h2>
+        <div class="flex space-x-2">
+          <button
+            (click)="exportData('pdf')"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+            </svg>
+            Exportar PDF
+          </button>
+          <button
+            (click)="exportData('excel')"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v1H3V4zm1 2h16v11a1 1 0 01-1 1H4a1 1 0 01-1-1V6zm5 3a1 1 0 00-1 1v3a1 1 0 002 0v-3a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v3a1 1 0 002 0v-3a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas de reportes -->
+    <div class="bg-white shadow-md rounded-lg">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex">
+          <button
+            (click)="setActiveTab('reservations')"
+            class="py-4 px-6 font-medium text-sm"
+            [ngClass]="activeTab === 'reservations' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            Reservas
+          </button>
+          <button
+            (click)="setActiveTab('efficiency')"
+            class="py-4 px-6 font-medium text-sm"
+            [ngClass]="activeTab === 'efficiency' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            Eficiencia
+          </button>
+          <button
+            (click)="setActiveTab('providers')"
+            class="py-4 px-6 font-medium text-sm"
+            [ngClass]="activeTab === 'providers' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            Proveedores
+          </button>
+        </nav>
+      </div>
+
+      <!-- Contenido de pestañas -->
+      <div class="p-6">
+        <div *ngIf="activeTab === 'reservations'">
+          <app-reservation-report [startDate]="startDate" [endDate]="endDate"></app-reservation-report>
+        </div>
+        <div *ngIf="activeTab === 'efficiency'">
+          <app-efficiency-report [startDate]="startDate" [endDate]="endDate"></app-efficiency-report>
+        </div>
+        <div *ngIf="activeTab === 'providers'">
+          <app-provider-report [startDate]="startDate" [endDate]="endDate"></app-provider-report>
+        </div>
+      </div>
+    </div>
+  </div>

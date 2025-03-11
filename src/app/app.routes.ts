@@ -32,18 +32,18 @@ export const routes: Routes = [
 //     canActivate: [authGuard],
 //     data: { requiredRole: 'AGENTE' }
 //   },
-//   {
-//     path: 'guard',
-//     loadChildren: () => import('./features/guard/guard.routes').then(m => m.GUARD_ROUTES),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'GUARDIA' }
-//   },
-//   {
-//     path: 'provider',
-//     loadChildren: () => import('./features/provider/provider.routes').then(m => m.PROVIDER_ROUTES),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
+  {
+    path: 'guard',
+    loadChildren: () => import('./features/guard/guard.routes').then(m => m.GUARD_ROUTES),
+    canActivate: [authGuard],
+    data: { requiredRole: 'GUARDIA' }
+  },
+  {
+    path: 'provider',
+    loadChildren: () => import('./features/provider/provider.routes').then(m => m.PROVIDER_ROUTES),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
 //   {
 //     path: '**',
 //     loadComponent: () => import('./shared/components/not-found/not-found.component').then(m => m.NotFoundComponent)

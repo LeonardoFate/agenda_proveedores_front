@@ -1,0 +1,127 @@
+<!-- src/app/features/guard/reservations/reservation-list.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Reservas</h1>
+      <p class="text-gray-600">Gestión de reservas programadas</p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading">
+      <!-- Filtros -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Filtro de fecha -->
+          <div>
+            <label for="date-filter" class="block text-sm font-medium text-gray-700">Fecha</label>
+            <input
+              type="date"
+              id="date-filter"
+              [(ngModel)]="selectedDate"
+              (change)="onDateChange()"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+          </div>
+
+          <!-- Filtro de estado -->
+          <div>
+            <label for="status-filter" class="block text-sm font-medium text-gray-700">Estado</label>
+            <select
+              id="status-filter"
+              [(ngModel)]="statusFilter"
+              (change)="onStatusFilterChange()"
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option value="">Todos</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="EN_PLANTA">En Planta</option>
+              <option value="EN_RECEPCION">En Recepción</option>
+              <option value="COMPLETADA">Completada</option>
+              <option value="CANCELADA">Cancelada</option>
+            </select>
+          </div>
+
+          <!-- Búsqueda -->
+          <div>
+            <label for="search" class="block text-sm font-medium text-gray-700">Buscar</label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <input
+                type="text"
+                id="search"
+                [(ngModel)]="searchTerm"
+                (input)="onSearch()"
+                placeholder="Buscar por proveedor, placa..."
+                class="focus:ring-primary-500 focus:border-primary-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
+              >
+              <button
+                type="button"
+                class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-r-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Reservas -->
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Andén</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placa</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let reservation of filteredReservations" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {{ reservation.id }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
+                  <div class="text-sm text-gray-500">{{ reservation.tipoServicioNombre }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ reservation.areaNombre }}</div>
+                  <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ reservation.transportePlaca }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
+                    {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <a [routerLink]="['/guard/entry', reservation.id]" class="text-primary-600 hover:text-primary-900">
+                    Ver Detalles
+                  </a>
+                </td>
+              </tr>
+              <tr *ngIf="filteredReservations.length === 0">
+                <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                  No se encontraron reservas que coincidan con los criterios de búsqueda.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>

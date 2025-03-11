@@ -1,0 +1,151 @@
+<!-- src/app/features/guard/entries/entry-management.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Control de Entradas/Salidas</h1>
+      <p class="text-gray-600">Registro de ingresos y salidas de vehículos</p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mr-3"></div>
+        <span>Procesando...</span>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Filtro de fecha -->
+        <div>
+          <label for="date-filter" class="block text-sm font-medium text-gray-700">Fecha</label>
+          <input
+            type="date"
+            id="date-filter"
+            [(ngModel)]="selectedDate"
+            (change)="onDateChange()"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+          >
+        </div>
+
+        <!-- Filtro por estado específico para entradas/salidas -->
+        <div>
+          <label for="entry-status-filter" class="block text-sm font-medium text-gray-700">Mostrar</label>
+          <select
+            id="entry-status-filter"
+            [(ngModel)]="statusFilter"
+            (change)="onStatusFilterChange()"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+          >
+            <option value="all">Todos</option>
+            <option value="pending">Por Ingresar</option>
+            <option value="inPlant">En Planta</option>
+          </select>
+        </div>
+
+        <!-- Búsqueda -->
+        <div>
+          <label for="search" class="block text-sm font-medium text-gray-700">Buscar</label>
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <input
+              type="text"
+              id="search"
+              [(ngModel)]="searchTerm"
+              (input)="onSearch()"
+              placeholder="Buscar por proveedor, placa..."
+              class="focus:ring-primary-500 focus:border-primary-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
+            >
+            <button
+              type="button"
+              class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-r-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Reservas con acciones de entrada/salida -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehículo</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let reservation of filteredReservations" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {{ reservation.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
+                <div class="text-sm text-gray-500">{{ reservation.tipoServicioNombre }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ reservation.transportePlaca }}</div>
+                <div class="text-sm text-gray-500">{{ reservation.transporteMarca }} {{ reservation.transporteModelo }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ reservation.areaNombre }}</div>
+                <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
+                  {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <!-- Acciones dependiendo del estado -->
+                <div class="flex justify-center space-x-2">
+                  <!-- Ingreso a planta (para reservas PENDIENTES) -->
+                  <button
+                    *ngIf="reservation.estado === 'PENDIENTE'"
+                    (click)="startTimeRecord(reservation.id || 0, 'INGRESO_PLANTA')"
+                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Registrar Ingreso
+                  </button>
+
+                  <!-- Salida de planta (para reservas EN_PLANTA o EN_RECEPCION) -->
+                  <button
+                    *ngIf="reservation.estado === 'EN_PLANTA' || reservation.estado === 'EN_RECEPCION'"
+                    (click)="startTimeRecord(reservation.id || 0, 'SALIDA_PLANTA')"
+                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    Registrar Salida
+                  </button>
+
+                  <!-- Ver detalles (para todos los estados) -->
+                  <a
+                    [routerLink]="['/guard/entry', reservation.id]"
+                    class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    Ver Detalles
+                  </a>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredReservations.length === 0">
+              <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                No se encontraron reservas que coincidan con los criterios de búsqueda.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
