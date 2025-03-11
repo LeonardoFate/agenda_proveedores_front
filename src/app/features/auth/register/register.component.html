@@ -21,7 +21,7 @@
                   type="text"
                   id="username"
                   formControlName="username"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('username')?.invalid && registerForm.get('username')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('username')?.errors?.['required'] && registerForm.get('username')?.touched">
@@ -38,7 +38,7 @@
                   type="email"
                   id="email"
                   formControlName="email"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('email')?.errors?.['required'] && registerForm.get('email')?.touched">
@@ -55,7 +55,7 @@
                   type="text"
                   id="nombre"
                   formControlName="nombre"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('nombre')?.errors?.['required'] && registerForm.get('nombre')?.touched">
@@ -69,7 +69,7 @@
                   type="text"
                   id="apellido"
                   formControlName="apellido"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('apellido')?.errors?.['required'] && registerForm.get('apellido')?.touched">
@@ -83,7 +83,7 @@
                   type="password"
                   id="password"
                   formControlName="password"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('password')?.errors?.['required'] && registerForm.get('password')?.touched">
@@ -100,7 +100,7 @@
                   type="password"
                   id="confirmPassword"
                   formControlName="confirmPassword"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('confirmPassword')?.errors?.['required'] && registerForm.get('confirmPassword')?.touched">
@@ -123,7 +123,7 @@
                   type="text"
                   id="nombreEmpresa"
                   formControlName="nombreEmpresa"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('nombreEmpresa')?.invalid && registerForm.get('nombreEmpresa')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('nombreEmpresa')?.errors?.['required'] && registerForm.get('nombreEmpresa')?.touched">
@@ -137,7 +137,7 @@
                   type="text"
                   id="ruc"
                   formControlName="ruc"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('ruc')?.invalid && registerForm.get('ruc')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('ruc')?.errors?.['required'] && registerForm.get('ruc')?.touched">
@@ -154,7 +154,7 @@
                   type="text"
                   id="direccion"
                   formControlName="direccion"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('direccion')?.invalid && registerForm.get('direccion')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('direccion')?.errors?.['required'] && registerForm.get('direccion')?.touched">
@@ -168,7 +168,7 @@
                   type="text"
                   id="telefono"
                   formControlName="telefono"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
                   [ngClass]="{'border-red-500': registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched}"
                 />
                 <div class="text-red-500 text-xs mt-1" *ngIf="registerForm.get('telefono')?.errors?.['required'] && registerForm.get('telefono')?.touched">
@@ -189,14 +189,14 @@
 
           <!-- Botones de acción -->
           <div class="flex justify-between items-center pt-4">
-            <a routerLink="/login" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+            <a routerLink="/login" class="text-sm font-medium text-red-600 hover:text-red-500">
               ¿Ya tiene cuenta? Inicie sesión
             </a>
 
             <button
               type="submit"
               [disabled]="isLoading"
-              class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ isLoading ? 'Registrando...' : 'Registrarse' }}
             </button>
