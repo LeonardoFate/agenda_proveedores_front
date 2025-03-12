@@ -1,0 +1,429 @@
+<!-- src/app/features/provider/schedule-reservation/schedule-reservation.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+      <!-- Encabezado -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">
+              {{ isEditing ? 'Editar Reserva' : 'Agendar Nueva Visita' }}
+            </h1>
+            <p class="text-gray-600">
+              {{ isEditing ? 'Actualice la información de su reserva' : 'Complete el formulario para realizar su reserva' }}
+            </p>
+          </div>
+          <div>
+            <a routerLink="/provider/dashboard" class="text-primary-600 hover:text-primary-700 flex items-center">
+              <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+              </svg>
+              Volver al dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-700">{{ errorMessage }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="successMessage" class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-md">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-green-700">{{ successMessage }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div *ngIf="loading" class="flex justify-center my-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      </div>
+
+      <!-- Formulario -->
+      <form *ngIf="!loading" [formGroup]="reservationForm" (ngSubmit)="onSubmit()" class="bg-white shadow-md rounded-lg overflow-hidden">
+        <!-- Sección 1: Información General -->
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Información General</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Fecha -->
+            <div>
+              <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Visita*</label>
+              <input
+                type="date"
+                id="fecha"
+                formControlName="fecha"
+                [min]="minDate"
+                [max]="maxDate"
+                (change)="onFechaChange()"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+              <p *ngIf="getControlError('fecha')" class="mt-1 text-sm text-red-600">{{ getControlError('fecha') }}</p>
+            </div>
+
+            <!-- Área -->
+            <div>
+              <label for="areaId" class="block text-sm font-medium text-gray-700 mb-1">Área*</label>
+              <select
+                id="areaId"
+                formControlName="areaId"
+                (change)="onAreaChange()"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Seleccione un área</option>
+                <option *ngFor="let area of areas" [value]="area.id">{{ area.nombre }}</option>
+              </select>
+              <p *ngIf="getControlError('areaId')" class="mt-1 text-sm text-red-600">{{ getControlError('areaId') }}</p>
+            </div>
+
+            <!-- Tipo de Servicio -->
+            <div>
+              <label for="tipoServicioId" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio*</label>
+              <select
+                id="tipoServicioId"
+                formControlName="tipoServicioId"
+                (change)="onTipoServicioChange()"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Seleccione un tipo de servicio</option>
+                <option *ngFor="let tipo of tiposServicio" [value]="tipo.id">{{ tipo.nombre }}</option>
+              </select>
+              <p *ngIf="getControlError('tipoServicioId')" class="mt-1 text-sm text-red-600">{{ getControlError('tipoServicioId') }}</p>
+            </div>
+
+            <!-- Descripción (opcional) -->
+            <div class="md:col-span-2">
+              <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
+              <textarea
+                id="descripcion"
+                formControlName="descripcion"
+                rows="2"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Detalles adicionales sobre la visita..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Selección de Andén y Horario -->
+        <div class="p-6 border-b border-gray-200 bg-gray-50">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Selección de Andén y Horario</h2>
+
+          <!-- Selección de Andén -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Seleccione un Andén*</label>
+
+            <div *ngIf="andenes.length === 0" class="p-4 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 mb-4">
+              No hay andenes disponibles para la selección actual. Por favor, seleccione otra área o tipo de servicio.
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div
+                *ngFor="let anden of andenes"
+                class="border rounded-lg p-4 cursor-pointer transition-colors duration-150"
+                [ngClass]="{
+                  'border-primary-500 bg-primary-50 cursor-pointer': isAndenDisponible(anden.id),
+                  'border-primary-600 bg-primary-100 ring-2 ring-primary-500': reservationForm.get('andenId')?.value == anden.id,
+                  'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed': !isAndenDisponible(anden.id)
+                }"
+                (click)="isAndenDisponible(anden.id) && reservationForm.patchValue({andenId: anden.id})"
+              >
+                <div class="font-medium">Andén {{ anden.numero }}</div>
+                <div class="text-sm text-gray-500">{{ anden.areaNombre }}</div>
+                <div *ngIf="anden.exclusivoContenedor" class="mt-2 text-xs py-1 px-2 bg-blue-100 text-blue-800 rounded-full inline-block">
+                  Exclusivo para Contenedores
+                </div>
+                <div *ngIf="!isAndenDisponible(anden.id)" class="mt-2 text-xs py-1 px-2 bg-red-100 text-red-800 rounded-full inline-block">
+                  No disponible
+                </div>
+              </div>
+            </div>
+
+            <p *ngIf="getControlError('andenId')" class="mt-1 text-sm text-red-600">{{ getControlError('andenId') }}</p>
+          </div>
+
+          <!-- Selección de Horario -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Hora Inicio -->
+            <div>
+              <label for="horaInicio" class="block text-sm font-medium text-gray-700 mb-1">Hora de Inicio*</label>
+              <select
+                id="horaInicio"
+                formControlName="horaInicio"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Seleccione hora de inicio</option>
+                <option
+                  *ngFor="let hora of getHorasDisponibles()"
+                  [value]="hora + ':00'"
+                  [disabled]="reservationForm.get('andenId')?.value && !isHourAvailable(hora + ':00', reservationForm.get('andenId')?.value)"
+                >
+                  {{ hora }}
+                </option>
+              </select>
+              <p *ngIf="getControlError('horaInicio')" class="mt-1 text-sm text-red-600">{{ getControlError('horaInicio') }}</p>
+            </div>
+
+            <!-- Hora Fin -->
+            <div>
+              <label for="horaFin" class="block text-sm font-medium text-gray-700 mb-1">Hora de Fin*</label>
+              <select
+                id="horaFin"
+                formControlName="horaFin"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Seleccione hora de fin</option>
+                <option
+                  *ngFor="let hora of getHorasDisponibles()"
+                  [value]="hora + ':00'"
+                  [disabled]="hora <= reservationForm.get('horaInicio')?.value?.substring(0, 5)"
+                >
+                  {{ hora }}
+                </option>
+              </select>
+              <p *ngIf="getControlError('horaFin')" class="mt-1 text-sm text-red-600">{{ getControlError('horaFin') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 3: Datos del Transporte -->
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Datos del Transporte</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Tipo de Transporte -->
+            <div>
+              <label for="transporteTipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Transporte*</label>
+              <select
+                id="transporteTipo"
+                formControlName="transporteTipo"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">Seleccione un tipo</option>
+                <option value="Camión">Camión</option>
+                <option value="Camioneta">Camioneta</option>
+                <option value="Furgón">Furgón</option>
+                <option value="Contenedor">Contenedor</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <p *ngIf="getControlError('transporteTipo')" class="mt-1 text-sm text-red-600">{{ getControlError('transporteTipo') }}</p>
+            </div>
+
+            <!-- Marca -->
+            <div>
+              <label for="transporteMarca" class="block text-sm font-medium text-gray-700 mb-1">Marca*</label>
+              <input
+                type="text"
+                id="transporteMarca"
+                formControlName="transporteMarca"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: Toyota, Hino, Kenworth..."
+              >
+              <p *ngIf="getControlError('transporteMarca')" class="mt-1 text-sm text-red-600">{{ getControlError('transporteMarca') }}</p>
+            </div>
+
+            <!-- Modelo -->
+            <div>
+              <label for="transporteModelo" class="block text-sm font-medium text-gray-700 mb-1">Modelo*</label>
+              <input
+                type="text"
+                id="transporteModelo"
+                formControlName="transporteModelo"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: Hilux, FH, T800..."
+              >
+              <p *ngIf="getControlError('transporteModelo')" class="mt-1 text-sm text-red-600">{{ getControlError('transporteModelo') }}</p>
+            </div>
+
+            <!-- Placa -->
+            <div>
+              <label for="transportePlaca" class="block text-sm font-medium text-gray-700 mb-1">Placa*</label>
+              <input
+                type="text"
+                id="transportePlaca"
+                formControlName="transportePlaca"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: ABC-1234"
+              >
+              <p *ngIf="getControlError('transportePlaca')" class="mt-1 text-sm text-red-600">{{ getControlError('transportePlaca') }}</p>
+            </div>
+
+            <!-- Capacidad (opcional) -->
+            <div class="md:col-span-2">
+              <label for="transporteCapacidad" class="block text-sm font-medium text-gray-700 mb-1">Capacidad (opcional)</label>
+              <input
+                type="text"
+                id="transporteCapacidad"
+                formControlName="transporteCapacidad"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ej: 5 toneladas, 20 pallets..."
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 4: Datos del Personal -->
+        <div class="p-6 border-b border-gray-200 bg-gray-50">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Datos del Personal</h2>
+
+          <!-- Datos del Conductor -->
+          <div class="mb-6">
+            <h3 class="text-md font-medium text-gray-700 mb-3">Información del Conductor</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Nombres -->
+              <div>
+                <label for="conductorNombres" class="block text-sm font-medium text-gray-700 mb-1">Nombres*</label>
+                <input
+                  type="text"
+                  id="conductorNombres"
+                  formControlName="conductorNombres"
+                  class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                <p *ngIf="getControlError('conductorNombres')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorNombres') }}</p>
+              </div>
+
+              <!-- Apellidos -->
+              <div>
+                <label for="conductorApellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos*</label>
+                <input
+                  type="text"
+                  id="conductorApellidos"
+                  formControlName="conductorApellidos"
+                  class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                <p *ngIf="getControlError('conductorApellidos')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorApellidos') }}</p>
+              </div>
+
+              <!-- Cédula -->
+              <div class="md:col-span-2">
+                <label for="conductorCedula" class="block text-sm font-medium text-gray-700 mb-1">Cédula/Documento de Identidad*</label>
+                <input
+                  type="text"
+                  id="conductorCedula"
+                  formControlName="conductorCedula"
+                  class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                <p *ngIf="getControlError('conductorCedula')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorCedula') }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos de Ayudantes -->
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-md font-medium text-gray-700">Ayudantes (Opcional)</h3>
+              <button
+                type="button"
+                (click)="addAyudante()"
+                class="py-1 px-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                Añadir Ayudante
+              </button>
+            </div>
+
+            <div *ngIf="ayudantesArray.length === 0" class="text-gray-500 text-sm">
+              No hay ayudantes registrados. Si necesita añadir ayudantes, haga clic en el botón "Añadir Ayudante".
+            </div>
+
+            <div formArrayName="ayudantes">
+              <div *ngFor="let ayudanteControl of ayudantesArray.controls; let i = index" class="border rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h4 class="font-medium">Ayudante {{i + 1}}</h4>
+                  <button
+                    type="button"
+                    (click)="removeAyudante(i)"
+                    class="p-1 text-red-600 hover:text-red-800 focus:outline-none"
+                  >
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Nombres -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombres*</label>
+                    <input
+                      type="text"
+                      formControlName="nombres"
+                      class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    >
+                    <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'nombres')" class="mt-1 text-sm text-red-600">
+                      {{ getFormArrayControlError(ayudantesArray, i, 'nombres') }}
+                    </p>
+                  </div>
+
+                  <!-- Apellidos -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos*</label>
+                    <input
+                      type="text"
+                      formControlName="apellidos"
+                      class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    >
+                    <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'apellidos')" class="mt-1 text-sm text-red-600">
+                      {{ getFormArrayControlError(ayudantesArray, i, 'apellidos') }}
+                    </p>
+                  </div>
+
+                  <!-- Cédula -->
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cédula/Documento de Identidad*</label>
+                    <input
+                      type="text"
+                      formControlName="cedula"
+                      class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    >
+                    <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'cedula')" class="mt-1 text-sm text-red-600">
+                      {{ getFormArrayControlError(ayudantesArray, i, 'cedula') }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="px-6 py-4 bg-gray-50 flex justify-between">
+          <button
+            type="button"
+            (click)="cancelForm()"
+            class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            [disabled]="submitting"
+            class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 flex items-center"
+          >
+            <svg *ngIf="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isEditing ? 'Actualizar Reserva' : 'Crear Reserva' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>

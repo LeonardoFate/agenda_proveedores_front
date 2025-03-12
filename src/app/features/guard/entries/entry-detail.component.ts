@@ -1,5 +1,5 @@
 // src/app/features/guard/entries/entry-detail.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,8 @@ import { ReservationService } from '../../../core/services/reservation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ReservaDetalle } from '../../../core/models/reserva.model';
 import { User } from '../../../core/models/user.model';
+import { Subscription } from 'rxjs';
+import { finalize, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-entry-detail',
@@ -14,13 +16,17 @@ import { User } from '../../../core/models/user.model';
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './entry-detail.component.html'
 })
-export class EntryDetailComponent implements OnInit {
+export class EntryDetailComponent implements OnInit, OnDestroy {
   reservationId: number = 0;
   reservation: ReservaDetalle | null = null;
   timeRecords: any[] = [];
   currentUser: User | null = null;
   loading = true;
   loadingAction = false;
+  errorMessage: string = '';
+  successMessage: string = '';
+
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -30,7 +36,7 @@ export class EntryDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
 
       // Obtener el ID de la reserva de la URL
@@ -40,30 +46,46 @@ export class EntryDetailComponent implements OnInit {
         this.loadReservationDetails();
       }
     });
+
+    this.subscriptions.push(userSub);
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar todas las suscripciones
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadReservationDetails(): void {
     this.loading = true;
+    console.log('Cargando detalles de reserva ID:', this.reservationId);
 
     // Obtener detalles de la reserva
-    this.reservationService.getReservationById(this.reservationId).subscribe({
+    const detailsSub = this.reservationService.getReservationById(this.reservationId).subscribe({
       next: (data) => {
+        console.log('Detalles de reserva cargados:', data);
         this.reservation = data;
         this.loadTimeRecords();
       },
       error: (error) => {
         console.error('Error loading reservation details', error);
         this.loading = false;
-        alert('No se pudo cargar los detalles de la reserva.');
-        this.router.navigate(['/guard/entries']);
+        this.errorMessage = 'No se pudo cargar los detalles de la reserva.';
+        setTimeout(() => {
+          this.router.navigate(['/guard/entries']);
+        }, 2000);
       }
     });
+
+    this.subscriptions.push(detailsSub);
   }
 
   loadTimeRecords(): void {
+    console.log('Cargando registros de tiempo para reserva ID:', this.reservationId);
+
     // Obtener registros de tiempo
-    this.reservationService.getTimeRecordsByReservation(this.reservationId).subscribe({
+    const recordsSub = this.reservationService.getTimeRecordsByReservation(this.reservationId).subscribe({
       next: (data) => {
+        console.log('Registros de tiempo cargados:', data);
         this.timeRecords = data;
         this.loading = false;
       },
@@ -73,104 +95,163 @@ export class EntryDetailComponent implements OnInit {
         this.loading = false;
       }
     });
+
+    this.subscriptions.push(recordsSub);
   }
 
   // Método para iniciar un registro de tiempo
   startTimeRecord(type: string): void {
     if (!this.currentUser || !this.reservation) {
+      console.error('No hay usuario o reserva');
       return;
     }
 
     this.loadingAction = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    this.reservationService.startTimeRecord(
+    console.log('Iniciando registro de tiempo:', {
+      reservaId: this.reservationId,
+      usuarioId: this.currentUser.id,
+      tipo: type
+    });
+
+    const startSub = this.reservationService.startTimeRecord(
       this.reservationId,
       this.currentUser.id,
       type
+    ).pipe(
+      finalize(() => {
+        if (!this.successMessage && !this.errorMessage) {
+          this.loadingAction = false;
+        }
+      })
     ).subscribe({
       next: (response) => {
+        console.log('Registro de tiempo iniciado:', response);
+        this.successMessage = 'Registro iniciado correctamente';
+
         // Actualizar la lista de registros
         this.loadTimeRecords();
 
         // Si es un ingreso a planta, actualizar el estado de la reserva
         if (type === 'INGRESO_PLANTA' && this.reservation?.estado === 'PENDIENTE') {
           this.updateReservationStatus('EN_PLANTA');
-        } else {
-          this.loadingAction = false;
         }
       },
       error: (error) => {
         console.error('Error starting time record', error);
+        this.errorMessage = 'Ocurrió un error al registrar el tiempo. Intente nuevamente.';
         this.loadingAction = false;
-        alert('Ocurrió un error al registrar el tiempo. Intente nuevamente.');
       }
     });
+
+    this.subscriptions.push(startSub);
   }
 
   // Método para finalizar un registro de tiempo
   finishTimeRecord(recordId: number, type: string): void {
     this.loadingAction = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    this.reservationService.finishTimeRecord(recordId).subscribe({
-      next: () => {
-        // Actualizar la lista de registros
-        this.loadTimeRecords();
+    console.log('Finalizando registro de tiempo ID:', recordId, 'Tipo:', type);
 
-        // Si es una salida de planta y la reserva está completada, actualizar el estado
-        if (type === 'SALIDA_PLANTA' &&
-            (this.reservation?.estado === 'EN_PLANTA' || this.reservation?.estado === 'EN_RECEPCION')) {
-          this.updateReservationStatus('COMPLETADA');
-        } else {
+    const finishSub = this.reservationService.finishTimeRecord(recordId)
+      .pipe(
+        finalize(() => {
+          if (!this.successMessage && !this.errorMessage) {
+            this.loadingAction = false;
+          }
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Registro de tiempo finalizado:', response);
+          this.successMessage = 'Registro finalizado correctamente';
+
+          // Actualizar la lista de registros
+          this.loadTimeRecords();
+
+          // Si es una salida de planta, actualizar el estado a COMPLETADA solo si
+          // se cumple la condición y no hay errores
+          if (type === 'SALIDA_PLANTA' &&
+              (this.reservation?.estado === 'EN_PLANTA' || this.reservation?.estado === 'EN_RECEPCION')) {
+
+            // Pequeño retraso para asegurar que el registro se actualizó
+            setTimeout(() => {
+              this.updateReservationStatus('COMPLETADA');
+            }, 500);
+          }
+        },
+        error: (error) => {
+          console.error('Error detallado al finalizar registro:', error);
+
+          if (error.status === 400 && error.error && error.error.mensaje) {
+            this.errorMessage = error.error.mensaje;
+          } else {
+            this.errorMessage = 'Ocurrió un error al finalizar el registro de tiempo. Intente nuevamente.';
+          }
+
           this.loadingAction = false;
         }
-      },
-      error: (error) => {
-        console.error('Error finishing time record', error);
-        this.loadingAction = false;
-        alert('Ocurrió un error al finalizar el registro de tiempo. Intente nuevamente.');
-      }
-    });
+      });
+
+    this.subscriptions.push(finishSub);
   }
 
   // Método para actualizar el estado de la reserva
   updateReservationStatus(newStatus: string): void {
     if (!this.reservation) {
+      console.error('No hay reserva para actualizar estado');
       return;
     }
 
-    this.reservationService.updateReservationStatus(this.reservationId, newStatus).subscribe({
-      next: (updatedReservation) => {
-        this.reservation = updatedReservation;
-        this.loadingAction = false;
-      },
-      error: (error) => {
-        console.error('Error updating reservation status', error);
-        this.loadingAction = false;
-        alert('Ocurrió un error al actualizar el estado de la reserva. Intente nuevamente.');
-      }
-    });
+    console.log('Actualizando estado de reserva a:', newStatus);
+
+    const updateSub = this.reservationService.updateReservationStatus(this.reservationId, newStatus)
+      .pipe(
+        finalize(() => {
+          this.loadingAction = false;
+        })
+      )
+      .subscribe({
+        next: (updatedReservation) => {
+          console.log('Reserva actualizada:', updatedReservation);
+          this.reservation = updatedReservation;
+          this.successMessage = `Estado actualizado a ${this.getStatusName(newStatus)} correctamente`;
+        },
+        error: (error) => {
+          console.error('Error detallado al actualizar estado:', error);
+
+          if (error.status === 400 && error.error && error.error.mensaje) {
+            this.errorMessage = error.error.mensaje;
+          } else {
+            this.errorMessage = 'Ocurrió un error al actualizar el estado de la reserva. Intente nuevamente.';
+          }
+        }
+      });
+
+    this.subscriptions.push(updateSub);
   }
 
-  // Método para formatear fechas
+  // Métodos de formateo y utilidades
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES');
   }
 
-  // Método para formatear horas
   formatTime(timeString: string | null | undefined): string {
     if (!timeString) return '-';
     return timeString.substring(0, 5);
   }
 
-  // Método para formatear fecha y hora completa
   formatDateTime(dateTimeString: string | null | undefined): string {
     if (!dateTimeString) return '-';
     const date = new Date(dateTimeString);
     return date.toLocaleString('es-ES');
   }
 
-  // Método para obtener una clase de color basada en el estado de la reserva
   getStatusClass(status: string): string {
     switch (status) {
       case 'PENDIENTE': return 'bg-yellow-100 text-yellow-800';
@@ -182,7 +263,6 @@ export class EntryDetailComponent implements OnInit {
     }
   }
 
-  // Método para traducir los estados
   getStatusName(status: string): string {
     switch (status) {
       case 'PENDIENTE': return 'Pendiente';
@@ -194,7 +274,6 @@ export class EntryDetailComponent implements OnInit {
     }
   }
 
-  // Método para traducir los tipos de registro
   getRecordTypeName(type: string): string {
     switch (type) {
       case 'INGRESO_PLANTA': return 'Ingreso a Planta';
@@ -203,5 +282,11 @@ export class EntryDetailComponent implements OnInit {
       case 'FIN_RECEPCION': return 'Fin de Recepción';
       default: return type;
     }
+  }
+
+  // Método para mostrar mensajes de error o éxito
+  clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
   }
 }

@@ -1,11 +1,12 @@
-// src/app/features/guard/dashboard/guard-dashboard.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { User } from '../../../core/models/user.model';
 import { Reserva } from '../../../core/models/reserva.model';
+import { Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-guard-dashboard',
@@ -13,7 +14,7 @@ import { Reserva } from '../../../core/models/reserva.model';
   imports: [CommonModule, RouterModule],
   templateUrl: './guard-dashboard.component.html',
 })
-export class GuardDashboardComponent implements OnInit {
+export class GuardDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   loading = true;
   todaysReservations: Reserva[] = [];
@@ -25,42 +26,66 @@ export class GuardDashboardComponent implements OnInit {
   };
   currentDate = new Date();
 
+  private subscriptions: Subscription[] = [];
+
   constructor(
     private authService: AuthService,
     private reservationService: ReservationService
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       this.loadTodaysReservations();
     });
+
+    this.subscriptions.push(userSub);
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar todas las suscripciones
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadTodaysReservations(): void {
     this.loading = true;
-    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    // Formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
 
-    this.reservationService.getReservationsByDate(today).subscribe({
-      next: (reservations) => {
-        this.todaysReservations = reservations;
-        this.calculateStats();
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading reservations', error);
-        this.loading = false;
-      }
-    });
+    console.log('Fecha para búsqueda de reservas:', today);
+
+    const reservationSub = this.reservationService.getReservationsByDate(today)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          console.log('Finalizada carga de reservas');
+        })
+      )
+      .subscribe({
+        next: (reservations) => {
+          console.log('Reservas recuperadas:', reservations);
+          this.todaysReservations = reservations;
+          this.calculateStats();
+        },
+        error: (error) => {
+          console.error('Error detallado al cargar reservas:', error);
+        }
+      });
+
+    this.subscriptions.push(reservationSub);
   }
 
   calculateStats(): void {
+    console.log('Calculando estadísticas con', this.todaysReservations.length, 'reservas');
+
     this.stats.totalToday = this.todaysReservations.length;
     this.stats.pendingToday = this.todaysReservations.filter(r => r.estado === 'PENDIENTE').length;
     this.stats.inPlantToday = this.todaysReservations.filter(r =>
       r.estado === 'EN_PLANTA' || r.estado === 'EN_RECEPCION'
     ).length;
     this.stats.completedToday = this.todaysReservations.filter(r => r.estado === 'COMPLETADA').length;
+
+    console.log('Estadísticas calculadas:', this.stats);
   }
 
   getNextReservations(): Reserva[] {

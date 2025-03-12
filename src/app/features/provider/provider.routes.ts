@@ -14,12 +14,12 @@ export const PROVIDER_ROUTES: Routes = [
     canActivate: [authGuard],
     data: { requiredRole: 'PROVEEDOR' }
   },
-//   {
-//     path: 'schedule',
-//     loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
+   {
+    path: 'schedule',
+    loadComponent: () => import('./schedule-reservation.component').then(m => m.ScheduleReservationComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
   {
     path: 'my-reservations',
     loadComponent: () => import('./reservations/my-reservations.component').then(m => m.MyReservationsComponent),
@@ -32,12 +32,12 @@ export const PROVIDER_ROUTES: Routes = [
     canActivate: [authGuard],
     data: { requiredRole: 'PROVEEDOR' }
   },
-//   {
-//     path: 'edit-reservation/:id',
-//     loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR', isEditing: true }
-//   },
+  {
+    path: 'edit-reservation/:id',
+    loadComponent: () => import('./schedule-reservation.component').then(m => m.ScheduleReservationComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR', isEditing: true }
+  },
 //   {
 //     path: 'profile',
 //     loadComponent: () => import('./profile/provider-profile.component').then(m => m.ProviderProfileComponent),

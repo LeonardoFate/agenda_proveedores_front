@@ -3,3 +3,291 @@
     <div *ngIf="loading" class="flex justify-center items-center h-64">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
     </div>
+
+    <!-- Loader para acciones -->
+    <div *ngIf="loadingAction" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mr-3"></div>
+        <span>Procesando acción...</span>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && reservation">
+      <!-- Cabecera y botones de acción -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <div class="flex items-center">
+              <a routerLink="/provider/my-reservations" class="text-primary-600 hover:text-primary-700 mr-2">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+              <h1 class="text-2xl font-bold text-gray-900">Detalle de Reserva #{{ reservation.id }}</h1>
+            </div>
+            <div class="flex items-center mt-2">
+              <span class="px-2 py-1 text-xs font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
+                {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+              </span>
+              <span class="ml-2 text-sm text-gray-500">{{ formatDate(reservation.fecha) }} | {{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}</span>
+            </div>
+          </div>
+
+          <div class="mt-4 md:mt-0 flex flex-wrap space-x-2">
+            <!-- Botones de acción según el estado -->
+            <a
+              *ngIf="canEdit()"
+              [routerLink]="['/provider/edit-reservation', reservation.id]"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Editar
+            </a>
+            <button
+              *ngIf="canCancel()"
+              (click)="cancelReservation()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancelar Reserva
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de la Reserva -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Datos de la reserva -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Detalles de la Reserva</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Área</p>
+              <p class="text-base text-gray-900">{{ reservation.areaNombre }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Andén</p>
+              <p class="text-base text-gray-900">{{ reservation.andenNumero }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Tipo de Servicio</p>
+              <p class="text-base text-gray-900">{{ reservation.tipoServicioNombre }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Fecha</p>
+              <p class="text-base text-gray-900">{{ formatDate(reservation.fecha) }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Hora Inicio</p>
+              <p class="text-base text-gray-900">{{ formatTime(reservation.horaInicio) }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Hora Fin</p>
+              <p class="text-base text-gray-900">{{ formatTime(reservation.horaFin) }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-sm font-medium text-gray-500">Descripción</p>
+              <p class="text-base text-gray-900">{{ reservation.descripcion || 'Sin descripción' }}</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <p class="text-sm font-medium text-gray-500">Creada</p>
+            <p class="text-base text-gray-900">{{ reservation.createdAt | date:'medium' }}</p>
+          </div>
+        </div>
+
+        <!-- Datos del Transporte y Conductor -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Información del Vehículo</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Placa</p>
+              <p class="text-base text-gray-900">{{ reservation.transportePlaca }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Tipo</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteTipo }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Marca</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteMarca }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Modelo</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteModelo }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Capacidad</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteCapacidad || 'No especificada' }}</p>
+            </div>
+          </div>
+
+          <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Conductor</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Nombre</p>
+              <p class="text-base text-gray-900">{{ reservation.conductorNombres }} {{ reservation.conductorApellidos }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Cédula</p>
+              <p class="text-base text-gray-900">{{ reservation.conductorCedula }}</p>
+            </div>
+          </div>
+
+          <!-- Ayudantes (si hay) -->
+          <div *ngIf="reservation.ayudantes && reservation.ayudantes.length > 0">
+            <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Ayudantes</h3>
+            <ul class="divide-y divide-gray-200">
+              <li *ngFor="let ayudante of reservation.ayudantes" class="py-2">
+                <p class="text-sm text-gray-900">{{ ayudante.nombres }} {{ ayudante.apellidos }}</p>
+                <p class="text-xs text-gray-500">Cédula: {{ ayudante.cedula }}</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+          <h2 class="text-lg font-medium text-gray-900">Documentos</h2>
+          <div *ngIf="canUploadDocuments()" class="mt-2 md:mt-0">
+            <label for="file-upload" class="cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Subir Documento
+            </label>
+            <input id="file-upload" type="file" class="hidden" (change)="uploadDocument($event)">
+          </div>
+        </div>
+
+        <div *ngIf="documents.length === 0" class="text-center py-8 text-gray-500">
+          No hay documentos adjuntos a esta reserva.
+        </div>
+
+        <div *ngIf="documents.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamaño</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let document of documents">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {{ document.nombre }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ document.tipo }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatFileSize(document.tamano) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ document.createdAt | date:'short' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <button
+                    (click)="downloadDocument(document.id, document.nombre)"
+                    class="text-primary-600 hover:text-primary-900 mr-3"
+                    title="Descargar"
+                  >
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
+                  <button
+                    *ngIf="canUploadDocuments()"
+                    (click)="deleteDocument(document.id)"
+                    class="text-red-600 hover:text-red-900"
+                    title="Eliminar"
+                  >
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Estado de la Reserva -->
+      <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Estado de la Reserva</h2>
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <ul class="relative flex justify-between">
+            <li class="flex items-center">
+              <div
+                [ngClass]="{
+                  'bg-primary-600': ['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                  'bg-gray-300': !['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                }"
+                class="h-6 w-6 rounded-full flex items-center justify-center"
+              >
+                <svg *ngIf="['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="ml-2 text-sm font-medium text-gray-900">Pendiente</span>
+            </li>
+            <li class="flex items-center">
+              <div
+                [ngClass]="{
+                  'bg-primary-600': ['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                  'bg-gray-300': !['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                }"
+                class="h-6 w-6 rounded-full flex items-center justify-center"
+              >
+                <svg *ngIf="['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="ml-2 text-sm font-medium text-gray-900">En Planta</span>
+            </li>
+            <li class="flex items-center">
+              <div
+                [ngClass]="{
+                  'bg-primary-600': ['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                  'bg-gray-300': !['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                }"
+                class="h-6 w-6 rounded-full flex items-center justify-center"
+              >
+                <svg *ngIf="['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="ml-2 text-sm font-medium text-gray-900">En Recepción</span>
+            </li>
+            <li class="flex items-center">
+              <div
+                [ngClass]="{
+                  'bg-primary-600': ['COMPLETADA'].includes(reservation.estado || ''),
+                  'bg-gray-300': !['COMPLETADA'].includes(reservation.estado || '')
+                }"
+                class="h-6 w-6 rounded-full flex items-center justify-center"
+              >
+                <svg *ngIf="['COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <span class="ml-2 text-sm font-medium text-gray-900">Completada</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>

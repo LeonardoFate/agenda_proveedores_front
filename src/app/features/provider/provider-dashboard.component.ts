@@ -1,24 +1,30 @@
 // src/app/features/provider/dashboard/provider-dashboard.component.ts
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProviderService } from '../../core/services/provider.service';
 import { User } from '../../core/models/user.model';
 import { Reserva } from '../../core/models/reserva.model';
+import { Proveedor } from '../../core/models/proveedor.model';
+import { Subscription } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-provider-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, DatePipe],
   templateUrl: './provider-dashboard.component.html',
 })
-export class ProviderDashboardComponent implements OnInit {
+export class ProviderDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  providerInfo: any = null;
+  providerInfo: Proveedor | null = null;
   loading = true;
   reservations: Reserva[] = [];
   currentDate = new Date();
+  errorMessage: string = '';
+
+  private subscriptions: Subscription[] = [];
 
   stats = {
     pendingReservations: 0,
@@ -35,7 +41,8 @@ export class ProviderDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    this.loading = true;
+    const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       if (user) {
         this.loadProviderInfo();
@@ -44,43 +51,65 @@ export class ProviderDashboardComponent implements OnInit {
         this.loading = false;
       }
     });
+
+    this.subscriptions.push(userSub);
+  }
+
+  ngOnDestroy(): void {
+    // Limpieza de suscripciones para evitar memory leaks
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadProviderInfo(): void {
     if (!this.currentUser) return;
 
-    // Aquí deberíamos tener un endpoint para obtener la info del proveedor a partir del usuario
-    // Como asumimos que no existe, usaremos una asociación directa entre usuario y proveedor
-    // En una implementación real, esto vendría del backend
+    const proveedorId = this.currentUser.id;
 
-    const proveedorId = this.currentUser.id; // Asumimos mismo ID
+    const providerSub = this.providerService.getProviderInfo(proveedorId)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading provider info:', error);
+          this.errorMessage = 'No se pudo cargar la información del proveedor.';
+          throw error;
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.providerInfo = data;
+        },
+        error: () => {
+          // El error ya fue manejado en el operador catchError
+          this.loading = false;
+        }
+      });
 
-    this.providerService.getProviderInfo(proveedorId).subscribe({
-      next: (data) => {
-        this.providerInfo = data;
-      },
-      error: (error) => {
-        console.error('Error loading provider info', error);
-      }
-    });
+    this.subscriptions.push(providerSub);
   }
 
   loadReservations(): void {
     if (!this.currentUser) return;
 
-    const proveedorId = this.currentUser.id; // Asumimos mismo ID
+    const proveedorId = this.currentUser.id;
 
-    this.providerService.getMyReservations(proveedorId).subscribe({
-      next: (reservations) => {
-        this.reservations = reservations;
-        this.calculateStats();
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading reservations', error);
-        this.loading = false;
-      }
-    });
+    const reservationSub = this.providerService.getMyReservations(proveedorId)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading reservations:', error);
+          this.errorMessage = 'No se pudieron cargar las reservas.';
+          throw error;
+        }),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (reservations) => {
+          this.reservations = reservations;
+          this.calculateStats();
+        }
+      });
+
+    this.subscriptions.push(reservationSub);
   }
 
   calculateStats(): void {
