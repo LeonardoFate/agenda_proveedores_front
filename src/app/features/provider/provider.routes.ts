@@ -15,7 +15,7 @@ export const PROVIDER_ROUTES: Routes = [
   },
    {
     path: 'schedule',
-    loadComponent: () => import('./schedule-reservation.component').then(m => m.ScheduleReservationComponent),
+    loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
     canActivate: [authGuard],
     data: { requiredRole: 'PROVEEDOR' }
   },
@@ -33,7 +33,7 @@ export const PROVIDER_ROUTES: Routes = [
   },
   {
     path: 'edit-reservation/:id',
-    loadComponent: () => import('./schedule-reservation.component').then(m => m.ScheduleReservationComponent),
+    loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
     canActivate: [authGuard],
     data: { requiredRole: 'PROVEEDOR', isEditing: true }
   },

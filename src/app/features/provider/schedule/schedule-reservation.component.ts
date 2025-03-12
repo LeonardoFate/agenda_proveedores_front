@@ -2,10 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../core/services/auth.service';
-import { ProviderService } from '../../core/services/provider.service';
-import { User } from '../../core/models/user.model';
-import { Ayudante, DisponibilidadAnden } from '../../core/models/reserva.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { ProviderService } from '../../../core/services/provider.service';
+import { User } from '../../../core/models/user.model';
+import { Ayudante, DisponibilidadAnden } from '../../../core/models/reserva.model';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
