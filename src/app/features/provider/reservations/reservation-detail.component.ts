@@ -1,4 +1,3 @@
-// src/app/features/provider/reservations/reservation-detail.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
