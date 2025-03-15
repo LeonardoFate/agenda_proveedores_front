@@ -26,12 +26,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { requiredRole: 'ADMIN' }
   },
-//   {
-//     path: 'agent',
-//     loadChildren: () => import('./features/agent/agent.routes').then(m => m.AGENT_ROUTES),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'AGENTE' }
-//   },
+  {
+    path: 'agent',
+    loadChildren: () => import('./features/agent/agent.routes').then(m => m.AGENT_ROUTES),
+    canActivate: [authGuard],
+    data: { requiredRole: 'AGENTE' }
+  },
   {
     path: 'guard',
     loadChildren: () => import('./features/guard/guard.routes').then(m => m.GUARD_ROUTES),

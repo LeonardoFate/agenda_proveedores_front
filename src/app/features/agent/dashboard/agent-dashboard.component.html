@@ -1,0 +1,213 @@
+<!-- src/app/features/agent/dashboard/agent-dashboard.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Panel de Agente</h1>
+      <p class="text-gray-600">
+        Control de recepciones | {{ currentDate | date:'EEEE, d MMMM yyyy' }}
+      </p>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <div *ngIf="!loading" class="space-y-6">
+      <!-- Estadísticas del día -->
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Estadísticas de Hoy</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Total Reservas -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
+                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Total Reservas</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.totalToday }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pendientes -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-yellow-100 p-3">
+                <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Por Recibir</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.pendingReceptions }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- En Recepción -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-purple-100 p-3">
+                <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">En Recepción</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.inProgressReceptions }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Completadas -->
+          <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Completadas</h3>
+                <p class="text-2xl font-semibold text-gray-700">{{ stats.completedReceptions }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximas Recepciones y En Proceso -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Próximas Recepciones -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b">
+            <h3 class="text-lg font-medium text-gray-900">Por Recibir</h3>
+          </div>
+          <div *ngIf="getNextReceptions().length === 0" class="p-6 text-center text-gray-500">
+            No hay reservas pendientes de recepción.
+          </div>
+          <ul *ngIf="getNextReceptions().length > 0" class="divide-y divide-gray-200">
+            <li *ngFor="let reservation of getNextReceptions()" class="p-4 hover:bg-gray-50">
+              <a [routerLink]="['/agent/reception', reservation.id]" class="block">
+                <div class="flex items-center">
+                  <div class="text-center font-medium text-sm text-gray-800 w-16">
+                    {{ formatTime(reservation.horaInicio) }}
+                  </div>
+                  <div class="ml-4 flex-1">
+                    <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
+                    <div class="text-sm text-gray-500">{{ reservation.areaNombre }} - Andén {{ reservation.andenNumero }}</div>
+                  </div>
+                  <div>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [ngClass]="getStatusClass(reservation.estado || 'EN_PLANTA')">
+                      {{ getStatusName(reservation.estado || 'EN_PLANTA') }}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+          <div class="px-6 py-3 bg-gray-50 text-right">
+            <a routerLink="/agent/receptions" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+              Ver todas las recepciones
+            </a>
+          </div>
+        </div>
+
+        <!-- En Proceso -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b">
+            <h3 class="text-lg font-medium text-gray-900">En Recepción</h3>
+          </div>
+          <div *ngIf="getCurrentReceptions().length === 0" class="p-6 text-center text-gray-500">
+            No hay recepciones en curso.
+          </div>
+          <ul *ngIf="getCurrentReceptions().length > 0" class="divide-y divide-gray-200">
+            <li *ngFor="let reservation of getCurrentReceptions()" class="p-4 hover:bg-gray-50">
+              <a [routerLink]="['/agent/reception', reservation.id]" class="block">
+                <div class="flex items-center">
+                  <div class="text-center font-medium text-sm text-gray-800 w-16">
+                    {{ formatTime(reservation.horaInicio) }}
+                  </div>
+                  <div class="ml-4 flex-1">
+                    <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
+                    <div class="text-sm text-gray-500">{{ reservation.areaNombre }} - Andén {{ reservation.andenNumero }}</div>
+                  </div>
+                  <div>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          [ngClass]="getStatusClass(reservation.estado || 'EN_RECEPCION')">
+                      {{ getStatusName(reservation.estado || 'EN_RECEPCION') }}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+          <div class="px-6 py-3 bg-gray-50 text-right">
+            <a routerLink="/agent/receptions" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+              Ver todas las recepciones
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones Rápidas -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Acciones Rápidas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Gestionar Andenes -->
+          <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
+                  <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div class="ml-5">
+                  <h3 class="text-lg font-medium text-gray-900">Gestionar Andenes</h3>
+                  <p class="text-sm text-gray-500">Administrar estados de andenes</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 p-4">
+              <a routerLink="/agent/docks" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                <span>Ir a Andenes</span>
+                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Gestionar Recepciones -->
+          <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
+                  <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div class="ml-5">
+                  <h3 class="text-lg font-medium text-gray-900">Gestionar Recepciones</h3>
+                  <p class="text-sm text-gray-500">Controlar recepciones de mercancía</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 p-4">
+              <a routerLink="/agent/receptions" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                <span>Ir a Recepciones</span>
+                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
