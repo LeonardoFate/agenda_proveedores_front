@@ -21,12 +21,12 @@ export const AGENT_ROUTES: Routes = [
         canActivate: [authGuard],
         data: { requiredRole: 'AGENTE' }
       },
-    //   {
-    //     path: 'receptions',
-    //     loadComponent: () => import('./receptions/receptions-list.component').then(m => m.ReceptionsListComponent),
-    //     canActivate: [authGuard],
-    //     data: { requiredRole: 'AGENTE' }
-    //   },
+      {
+        path: 'receptions',
+        loadComponent: () => import('./receptions/receptions-list.component').then(m => m.ReceptionsListComponent),
+        canActivate: [authGuard],
+        data: { requiredRole: 'AGENTE' }
+      },
     //   {
     //     path: 'reception/:id',
     //     loadComponent: () => import('./receptions/reception-detail.component').then(m => m.ReceptionDetailComponent),

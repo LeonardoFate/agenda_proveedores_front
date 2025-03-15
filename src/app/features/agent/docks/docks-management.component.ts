@@ -59,12 +59,15 @@ export class DocksManagementComponent implements OnInit {
     this.loadAndenes();
   }
 
-  updateAndenStatus(andenId: number, newStatus: EstadoAnden): void {
+  updateAndenStatus(andenId: number, newStatus: string): void {
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.areaService.updateAndenStatus(andenId, newStatus).subscribe({
+    // Convertir el string a enum si es necesario
+    const estadoEnum = newStatus as EstadoAnden;
+
+    this.areaService.updateAndenStatus(andenId, estadoEnum).subscribe({
       next: (updatedAnden) => {
         // Actualizar el andén en la lista local
         const index = this.andenes.findIndex(a => a.id === andenId);

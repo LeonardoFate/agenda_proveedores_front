@@ -1,0 +1,83 @@
+<!-- src/app/features/agent/docks/docks-management.component.html -->
+<div class="bg-gray-50 min-h-screen p-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Gestión de Andenes</h1>
+      <p class="text-gray-600">Gestiona los estados y disponibilidad de andenes</p>
+    </div>
+    <!-- Mensajes -->
+    <div *ngIf="successMessage" class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded">
+      {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+      {{ errorMessage }}
+    </div>
+    <!-- Filtros -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Filtro de Área -->
+        <div>
+          <label for="area-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Área</label>
+          <select
+            id="area-filter"
+            [(ngModel)]="areaFilter"
+            (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Todas las áreas</option>
+            <option *ngFor="let area of areas" [value]="area.id">{{ area.nombre }}</option>
+          </select>
+        </div>
+        <!-- Filtro de Estado -->
+        <div>
+          <label for="estado-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Estado</label>
+          <select
+            id="estado-filter"
+            [(ngModel)]="estadoFilter"
+            (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Todos los estados</option>
+            <option *ngFor="let estado of estados" [value]="estado">{{ estado }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+    <!-- Lista de Andenes -->
+    <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let anden of getFilteredAndenes()" class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Andén {{ anden.numero }}</h3>
+            <span class="px-2 py-1 text-xs leading-5 font-semibold rounded-full" [ngClass]="getStatusClass(anden.estado)">
+              {{ anden.estado }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-500">{{ getAreaName(anden.areaId) }}</p>
+          <p *ngIf="anden.capacidad" class="text-sm text-gray-500">Capacidad: {{ anden.capacidad }}</p>
+          <p *ngIf="anden.exclusivoContenedor" class="text-sm font-medium text-blue-600">Exclusivo para Contenedores</p>
+        </div>
+        <div class="p-4 bg-gray-50">
+          <label for="estado-{{ anden.id }}" class="block text-sm font-medium text-gray-700 mb-1">Cambiar Estado</label>
+          <div class="flex space-x-2">
+            <select
+              id="estado-{{ anden.id }}"
+              [ngModel]="anden.estado"
+              (ngModelChange)="updateAndenStatus(anden.id, $event)"
+              class="block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            >
+              <option *ngFor="let estado of estados" [value]="estado">{{ estado }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje si no hay andenes -->
+    <div *ngIf="!loading && getFilteredAndenes().length === 0" class="bg-white shadow-md rounded-lg p-6 text-center">
+      <p class="text-gray-600">No se encontraron andenes con los filtros aplicados.</p>
+    </div>
+  </div>
