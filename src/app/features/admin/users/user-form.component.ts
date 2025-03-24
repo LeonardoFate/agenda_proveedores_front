@@ -9,7 +9,6 @@ import { UserService } from '../../../core/services/user.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.scss']
 })
 export class UserFormComponent implements OnInit {
   userForm: FormGroup;
@@ -76,26 +75,49 @@ export class UserFormComponent implements OnInit {
       this.errorMessage = '';
       this.successMessage = '';
 
-      // Si estamos editando y no se ha proporcionado una nueva contraseña, eliminarla del objeto
+      // Obtener los datos del formulario
       const userData = { ...this.userForm.value };
-      if (this.isEditing && !userData.password) {
-        delete userData.password;
-      }
+      const newPassword = userData.password; // Guardar la contraseña para usarla después
 
-      if (this.isEditing && this.userId) {
+      if (this.isEditing && this.userId !== null) {
+        // Siempre eliminamos la contraseña del objeto de actualización de usuario
+        delete userData.password;
+
+        // Primero actualizamos la información general del usuario
         this.userService.updateUser(this.userId, userData).subscribe({
           next: () => {
-            this.successMessage = 'Usuario actualizado exitosamente.';
-            this.loading = false;
-            setTimeout(() => {
-              this.router.navigate(['/admin/users']);
-            }, 1500);
+            // Si hay una nueva contraseña, la actualizamos en una llamada separada
+            if (newPassword) {
+              console.log('Cambiando contraseña para usuario:', this.userId);
+              this.userService.changePassword(this.userId!, newPassword).subscribe({
+                next: () => {
+                  console.log('Contraseña actualizada exitosamente');
+                  this.successMessage = 'Usuario y contraseña actualizados exitosamente.';
+                  this.loading = false;
+                  setTimeout(() => {
+                    this.router.navigate(['/admin/users']);
+                  }, 1500);
+                },
+                error: (error) => {
+                  console.error('Error al cambiar contraseña:', error);
+                  this.handleError(error);
+                }
+              });
+            } else {
+              // Si no hay nueva contraseña, terminamos aquí
+              this.successMessage = 'Usuario actualizado exitosamente.';
+              this.loading = false;
+              setTimeout(() => {
+                this.router.navigate(['/admin/users']);
+              }, 1500);
+            }
           },
           error: (error) => {
             this.handleError(error);
           }
         });
       } else {
+        // Creación de un nuevo usuario (mantener el código existente)
         this.userService.createUser(userData).subscribe({
           next: () => {
             this.successMessage = 'Usuario creado exitosamente.';

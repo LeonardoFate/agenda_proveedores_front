@@ -59,31 +59,33 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  loadProviderInfo(): void {
-    if (!this.currentUser) return;
+loadProviderInfo(): void {
+  if (!this.currentUser) return;
 
-    const proveedorId = this.currentUser.id;
+  const usuarioId = this.currentUser.id;
 
-    const providerSub = this.providerService.getProviderInfo(proveedorId)
-      .pipe(
-        catchError(error => {
-          console.error('Error loading provider info:', error);
-          this.errorMessage = 'No se pudo cargar la información del proveedor.';
-          throw error;
-        })
-      )
-      .subscribe({
-        next: (data) => {
-          this.providerInfo = data;
-        },
-        error: () => {
-          // El error ya fue manejado en el operador catchError
-          this.loading = false;
-        }
-      });
+  // Utilizamos el nuevo método que obtiene el proveedor por ID de usuario
+  const providerSub = this.providerService.getProviderByUsuarioId(usuarioId)
+    .pipe(
+      catchError(error => {
+        console.error('Error al cargar la información del proveedor:', error);
+        this.errorMessage = 'No se pudo cargar la información del proveedor.';
+        throw error;
+      })
+    )
+    .subscribe({
+      next: (data) => {
+        this.providerInfo = data;
+      },
+      error: () => {
+        // El error ya fue manejado en el operador catchError
+        this.loading = false;
+      }
+    });
 
-    this.subscriptions.push(providerSub);
-  }
+  this.subscriptions.push(providerSub);
+}
+
 
   loadReservations(): void {
     if (!this.currentUser) return;

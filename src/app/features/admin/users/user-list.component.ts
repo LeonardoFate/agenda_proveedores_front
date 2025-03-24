@@ -10,7 +10,7 @@ import { User } from '../../../core/models/user.model';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.scss']
+
 })
 export class UserListComponent implements OnInit {
   users: User[] = [];

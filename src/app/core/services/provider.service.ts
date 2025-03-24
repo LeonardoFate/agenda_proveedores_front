@@ -72,8 +72,8 @@ export class ProviderService {
   }
 
   // Obtener información del proveedor
-  getProviderInfo(proveedorId: number): Observable<any> {
-    return this.http.get<any>(`${this.proveedoresUrl}/${proveedorId}`);
+  getProviderByUsuarioId(usuarioId: number): Observable<any> {
+    return this.http.get<any>(`${this.proveedoresUrl}/usuario/${usuarioId}`);
   }
 
   // Actualizar información del proveedor

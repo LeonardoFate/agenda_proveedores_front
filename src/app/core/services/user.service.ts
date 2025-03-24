@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators'; // Añade esta importación
 import { environment } from '../../../environments/environment';
 import { User } from '../models/user.model';
 
@@ -38,6 +39,9 @@ export class UserService {
   }
 
   changePassword(id: number, newPassword: string): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${id}/cambiar-password?nuevaPassword=${newPassword}`, {});
+    console.log(`Enviando solicitud para cambiar contraseña del usuario ${id}`);
+    return this.http.patch<void>(`${this.apiUrl}/${id}/cambiar-password`, {
+      nuevaPassword: newPassword
+    });
   }
 }
