@@ -44,8 +44,9 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       if (user) {
+        // Solo cargamos la información del proveedor primero
+        // Las reservas se cargarán después de obtener la info del proveedor
         this.loadProviderInfo();
-        this.loadReservations();
       } else {
         this.loading = false;
       }
@@ -59,43 +60,52 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-loadProviderInfo(): void {
-  if (!this.currentUser) return;
-
-  const usuarioId = this.currentUser.id;
-
-  // Utilizamos el nuevo método que obtiene el proveedor por ID de usuario
-  const providerSub = this.providerService.getProviderByUsuarioId(usuarioId)
-    .pipe(
-      catchError(error => {
-        console.error('Error al cargar la información del proveedor:', error);
-        this.errorMessage = 'No se pudo cargar la información del proveedor.';
-        throw error;
-      })
-    )
-    .subscribe({
-      next: (data) => {
-        this.providerInfo = data;
-      },
-      error: () => {
-        // El error ya fue manejado en el operador catchError
-        this.loading = false;
-      }
-    });
-
-  this.subscriptions.push(providerSub);
-}
-
-
-  loadReservations(): void {
+  loadProviderInfo(): void {
     if (!this.currentUser) return;
 
-    const proveedorId = this.currentUser.id;
+    const usuarioId = this.currentUser.id;
+    console.log('Cargando información del proveedor para el usuario ID:', usuarioId);
+
+    // Utilizamos el método que obtiene el proveedor por ID de usuario
+    const providerSub = this.providerService.getProviderByUsuarioId(usuarioId)
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar la información del proveedor:', error);
+          this.errorMessage = 'No se pudo cargar la información del proveedor.';
+          throw error;
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.providerInfo = data;
+          console.log('Información del proveedor cargada:', this.providerInfo);
+          // Ahora que tenemos la información del proveedor, cargamos las reservas
+          this.loadReservations();
+        },
+        error: () => {
+          // El error ya fue manejado en el operador catchError
+          this.loading = false;
+        }
+      });
+
+    this.subscriptions.push(providerSub);
+  }
+
+  loadReservations(): void {
+    if (!this.providerInfo) {
+      console.error('No se puede cargar reservas: providerInfo es null');
+      this.loading = false;
+      return;
+    }
+
+    // Usar el ID del proveedor, no el ID del usuario
+    const proveedorId = this.providerInfo.id;
+    console.log('Cargando reservas para el proveedor ID:', proveedorId);
 
     const reservationSub = this.providerService.getMyReservations(proveedorId)
       .pipe(
         catchError(error => {
-          console.error('Error loading reservations:', error);
+          console.error('Error al cargar las reservas:', error);
           this.errorMessage = 'No se pudieron cargar las reservas.';
           throw error;
         }),

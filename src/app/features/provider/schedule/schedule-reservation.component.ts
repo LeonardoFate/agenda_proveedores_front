@@ -24,6 +24,7 @@ export class ScheduleReservationComponent implements OnInit, OnDestroy {
   disponibilidad: DisponibilidadAnden[] = [];
   horariosOcupados: {[key: number]: {horaInicio: string, horaFin: string}[]} = {};
   currentUser: User | null = null;
+  providerInfo: any = null; // Para almacenar la información del proveedor
   loading = false;
   submitting = false;
   isEditing = false;
@@ -56,34 +57,59 @@ export class ScheduleReservationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loading = true;
     const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       console.log('Usuario actual:', user);
 
       if (user) {
-        // Establecer el ID del proveedor al iniciar
-        this.reservationForm.patchValue({ proveedorId: user.id });
+        // Primero obtener información del proveedor asociado al usuario
+        const providerSub = this.providerService.getProviderByUsuarioId(user.id).subscribe({
+          next: (providerData) => {
+            this.providerInfo = providerData;
+            console.log('Información del proveedor obtenida:', providerData);
+
+            // Establecer el ID del proveedor en el formulario (no el ID del usuario)
+            this.reservationForm.patchValue({ proveedorId: providerData.id });
+            console.log('ProveedorId establecido:', providerData.id);
+
+            // Continuar con la carga de datos después de obtener el proveedor
+            this.continueInitialization();
+            this.loading = false;
+          },
+          error: (error) => {
+            console.error('Error al obtener información del proveedor:', error);
+            this.errorMessage = 'No se pudo obtener la información del proveedor.';
+            this.loading = false;
+          }
+        });
+
+        this.subscriptions.push(providerSub);
+      } else {
+        this.loading = false;
       }
-
-      // Obtener ID de reserva para edición (si existe)
-      const routeSub = this.route.data.subscribe(data => {
-        this.isEditing = data['isEditing'] || false;
-        console.log('Modo edición:', this.isEditing);
-      });
-      this.subscriptions.push(routeSub);
-
-      const id = this.route.snapshot.paramMap.get('id');
-      if (id && this.isEditing) {
-        this.reservationId = +id;
-        this.loadReservationDetails(this.reservationId);
-      }
-
-      // Cargar datos para los selects
-      this.loadAreas();
-      this.loadTiposServicio();
     });
 
     this.subscriptions.push(userSub);
+  }
+
+  continueInitialization(): void {
+    // Obtener ID de reserva para edición (si existe)
+    const routeSub = this.route.data.subscribe(data => {
+      this.isEditing = data['isEditing'] || false;
+      console.log('Modo edición:', this.isEditing);
+    });
+    this.subscriptions.push(routeSub);
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id && this.isEditing) {
+      this.reservationId = +id;
+      this.loadReservationDetails(this.reservationId);
+    }
+
+    // Cargar datos para los selects
+    this.loadAreas();
+    this.loadTiposServicio();
   }
 
   ngOnDestroy(): void {
@@ -132,10 +158,11 @@ export class ScheduleReservationComponent implements OnInit, OnDestroy {
           });
         }
 
-        // Establecer proveedorId del usuario actual
-        if (this.currentUser) {
-          data.proveedorId = this.currentUser.id;
-          console.log('ProveedorId establecido:', this.currentUser.id);
+        // Mantener el proveedorId obtenido del proveedor
+        // No sobrescribir con el ID del usuario
+        if (this.providerInfo) {
+          data.proveedorId = this.providerInfo.id;
+          console.log('ProveedorId establecido desde la info del proveedor:', this.providerInfo.id);
         }
 
         // Actualizar el formulario con los datos de la reserva
@@ -360,14 +387,20 @@ export class ScheduleReservationComponent implements OnInit, OnDestroy {
       this.errorMessage = '';
       this.successMessage = '';
 
-      // SIEMPRE asegurarse de que el ID del proveedor esté establecido
-      if (this.currentUser) {
-        this.reservationForm.patchValue({ proveedorId: this.currentUser.id });
-        console.log('ProveedorId actualizado antes de enviar:', this.currentUser.id);
+      // Verificar que el proveedorId está establecido correctamente
+      const proveedorId = this.reservationForm.get('proveedorId')?.value;
+      if (!proveedorId) {
+        this.errorMessage = 'Error: No se ha podido establecer el ID del proveedor';
+        this.submitting = false;
+        return;
       }
 
+      console.log('ProveedorId utilizado para la reserva:', proveedorId);
+
+      // Clonar los datos del formulario
       const formData = {...this.reservationForm.value};
       console.log('Datos a enviar:', formData);
+      console.log('Datos JSON a enviar:', JSON.stringify(formData));
 
       if (this.isEditing && this.reservationId) {
         // Actualizar reserva existente
@@ -452,6 +485,7 @@ export class ScheduleReservationComponent implements OnInit, OnDestroy {
       this.errorMessage = 'No tiene permisos para realizar esta acción.';
     } else if (error.status === 404) {
       this.errorMessage = 'No se encontró el recurso solicitado.';
+      console.error('URL que no se encontró:', error.url);
     } else {
       this.errorMessage = error.error?.mensaje || 'Error al procesar la solicitud. Intente nuevamente.';
     }
