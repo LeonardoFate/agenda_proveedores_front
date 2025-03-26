@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ProviderService } from '../../../core/services/provider.service';
 import { User } from '../../../core/models/user.model';
 import { Reserva } from '../../../core/models/reserva.model';
+import { Proveedor } from '../../../core/models/proveedor.model';
 
 @Component({
   selector: 'app-my-reservations',
@@ -15,9 +16,11 @@ import { Reserva } from '../../../core/models/reserva.model';
 })
 export class MyReservationsComponent implements OnInit {
   currentUser: User | null = null;
+  providerInfo: Proveedor | null = null;
   reservations: Reserva[] = [];
   filteredReservations: Reserva[] = [];
   loading = true;
+  errorMessage = '';
 
   // Filtros
   searchTerm = '';
@@ -33,27 +36,53 @@ export class MyReservationsComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       if (user) {
-        this.loadReservations();
+        this.loadProviderInfo();
       } else {
         this.loading = false;
       }
     });
   }
 
-  loadReservations(): void {
+  loadProviderInfo(): void {
     if (!this.currentUser) return;
 
-    const proveedorId = this.currentUser.id; // Asumimos mismo ID
-
     this.loading = true;
+    console.log('Obteniendo información de proveedor para usuario ID:', this.currentUser.id);
+
+    this.providerService.getProviderByUsuarioId(this.currentUser.id).subscribe({
+      next: (data) => {
+        this.providerInfo = data;
+        console.log('Información de proveedor obtenida:', data);
+        this.loadReservations();
+      },
+      error: (error) => {
+        console.error('Error obteniendo información del proveedor:', error);
+        this.errorMessage = 'No se pudo obtener la información del proveedor.';
+        this.loading = false;
+      }
+    });
+  }
+
+  loadReservations(): void {
+    if (!this.providerInfo) {
+      console.error('No se puede cargar reservas: providerInfo es null');
+      this.loading = false;
+      return;
+    }
+
+    const proveedorId = this.providerInfo.id;
+    console.log('Cargando reservas para proveedor ID:', proveedorId);
+
     this.providerService.getMyReservations(proveedorId).subscribe({
       next: (data) => {
         this.reservations = data;
+        console.log('Reservas cargadas:', data.length);
         this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading reservations', error);
+        console.error('Error cargando reservas:', error);
+        this.errorMessage = 'Error al cargar las reservas. Por favor intente nuevamente.';
         this.loading = false;
       }
     });

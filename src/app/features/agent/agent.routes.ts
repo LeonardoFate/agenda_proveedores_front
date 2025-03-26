@@ -27,10 +27,10 @@ export const AGENT_ROUTES: Routes = [
         canActivate: [authGuard],
         data: { requiredRole: 'AGENTE' }
       },
-    //   {
-    //     path: 'reception/:id',
-    //     loadComponent: () => import('./receptions/reception-detail.component').then(m => m.ReceptionDetailComponent),
-    //     canActivate: [authGuard],
-    //     data: { requiredRole: 'AGENTE' }
-    //   }
+      {
+        path: 'reception/:id',
+        loadComponent: () => import('./receptions/reception-detail/reception-detail.component').then(m => m.ReceptionDetailComponent),
+        canActivate: [authGuard],
+        data: { requiredRole: 'AGENTE' }
+      }
     ];

@@ -1,0 +1,310 @@
+<div class="bg-gray-50 min-h-screen p-6">
+    <!-- Cabecera -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <div class="flex items-center">
+            <a routerLink="/agent/receptions" class="text-primary-600 hover:text-primary-700 mr-2">
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Detalle de Recepción #{{ reservation?.id }}</h1>
+          </div>
+          <div class="flex items-center mt-2">
+            <span class="px-2 py-1 text-xs font-semibold rounded-full"
+                  *ngIf="reservation?.estado"
+                  [ngClass]="getStatusClass(reservation?.estado || '')">
+              {{ getStatusName(reservation?.estado || '') }}
+            </span>
+            <span class="ml-2 text-sm text-gray-500" *ngIf="reservation?.fecha">
+              {{ formatDate(reservation?.fecha) }} | {{ formatTime(reservation?.horaInicio) }} - {{ formatTime(reservation?.horaFin) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-4 md:mt-0">
+          <!-- Botones de acción según estado -->
+          <button
+            *ngIf="reservation?.estado === 'EN_PLANTA'"
+            (click)="startReception()"
+            class="ml-2 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Iniciar Recepción
+          </button>
+          <button
+            *ngIf="reservation?.estado === 'EN_RECEPCION'"
+            (click)="completeReception()"
+            class="ml-2 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Completar Recepción
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div *ngIf="!loading && reservation">
+      <!-- Información de la reserva y proveedor -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Información de la reserva -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Información de la Recepción</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-medium text-gray-500">Área</p>
+              <p class="text-base text-gray-900">{{ reservation.areaNombre }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Andén</p>
+              <p class="text-base text-gray-900">{{ reservation.andenNumero }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Tipo de Servicio</p>
+              <p class="text-base text-gray-900">{{ reservation.tipoServicioNombre }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Fecha</p>
+              <p class="text-base text-gray-900">{{ formatDate(reservation.fecha) }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Hora de Inicio</p>
+              <p class="text-base text-gray-900">{{ formatTime(reservation.horaInicio) }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Hora de Fin</p>
+              <p class="text-base text-gray-900">{{ formatTime(reservation.horaFin) }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-sm font-medium text-gray-500">Descripción</p>
+              <p class="text-base text-gray-900">{{ reservation.descripcion || 'Sin descripción' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del proveedor -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Información del Proveedor</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <p class="text-sm font-medium text-gray-500">Empresa</p>
+              <p class="text-base text-gray-900">{{ reservation.proveedorNombre }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Transporte</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteTipo }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Placa</p>
+              <p class="text-base text-gray-900">{{ reservation.transportePlaca }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Marca/Modelo</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteMarca }} {{ reservation.transporteModelo }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500">Capacidad</p>
+              <p class="text-base text-gray-900">{{ reservation.transporteCapacidad || 'No especificada' }}</p>
+            </div>
+          </div>
+
+          <div class="mt-4 border-t border-gray-200 pt-4">
+            <h3 class="text-md font-medium text-gray-900 mb-2">Conductor</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm font-medium text-gray-500">Nombre</p>
+                <p class="text-base text-gray-900">{{ reservation.conductorNombres }} {{ reservation.conductorApellidos }}</p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-500">Cédula</p>
+                <p class="text-base text-gray-900">{{ reservation.conductorCedula }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ayudantes -->
+          <div *ngIf="reservation.ayudantes && reservation.ayudantes.length > 0" class="mt-4 border-t border-gray-200 pt-4">
+            <h3 class="text-md font-medium text-gray-900 mb-2">Ayudantes</h3>
+            <ul class="divide-y divide-gray-200">
+              <li *ngFor="let ayudante of reservation.ayudantes" class="py-2">
+                <p class="text-sm text-gray-900">{{ ayudante.nombres }} {{ ayudante.apellidos }}</p>
+                <p class="text-xs text-gray-500">Cédula: {{ ayudante.cedula }}</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Documentos</h2>
+
+        <div *ngIf="documents.length === 0" class="text-center py-4 text-gray-500">
+          No hay documentos asociados a esta recepción.
+        </div>
+
+        <div *ngIf="documents.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamaño</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let document of documents">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {{ document.nombre }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ document.tipo }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatFileSize(document.tamano) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ document.createdAt | date:'short' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  <button
+                    (click)="downloadDocument(document.id, document.nombre)"
+                    class="text-primary-600 hover:text-primary-900"
+                    title="Descargar"
+                  >
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Registro de tiempos -->
+      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Registro de Tiempos</h2>
+
+        <div *ngIf="timeRecords.length === 0" class="text-center py-4 text-gray-500">
+          No hay registros de tiempo para esta recepción.
+        </div>
+
+        <div *ngIf="timeRecords.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Inicio</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Fin</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let record of timeRecords">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {{ getTimeRecordTypeName(record.tipo) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ record.horaInicio | date:'medium' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ record.horaFin ? (record.horaFin | date:'medium') : 'En progreso' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ record.duracion ? formatDuration(record.duracion) : '-' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ record.usuarioNombre }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Estado de la Reserva -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Estado del Proceso</h2>
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <ul class="relative flex justify-between">
+              <li class="flex items-center">
+                <div
+                  [ngClass]="{
+                    'bg-primary-600': ['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                    'bg-gray-300': !['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                  }"
+                  class="h-6 w-6 rounded-full flex items-center justify-center"
+                >
+                  <svg *ngIf="['PENDIENTE', 'EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-900">Pendiente</span>
+              </li>
+              <li class="flex items-center">
+                <div
+                  [ngClass]="{
+                    'bg-primary-600': ['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                    'bg-gray-300': !['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                  }"
+                  class="h-6 w-6 rounded-full flex items-center justify-center"
+                >
+                  <svg *ngIf="['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-900">En Planta</span>
+              </li>
+              <li class="flex items-center">
+                <div
+                  [ngClass]="{
+                    'bg-primary-600': ['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || ''),
+                    'bg-gray-300': !['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')
+                  }"
+                  class="h-6 w-6 rounded-full flex items-center justify-center"
+                >
+                  <svg *ngIf="['EN_RECEPCION', 'COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-900">En Recepción</span>
+              </li>
+              <li class="flex items-center">
+                <div
+                  [ngClass]="{
+                    'bg-primary-600': ['COMPLETADA'].includes(reservation.estado || ''),
+                    'bg-gray-300': !['COMPLETADA'].includes(reservation.estado || '')
+                  }"
+                  class="h-6 w-6 rounded-full flex items-center justify-center"
+                >
+                  <svg *ngIf="['COMPLETADA'].includes(reservation.estado || '')" class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-900">Completada</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
