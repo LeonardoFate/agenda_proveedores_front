@@ -1,203 +1,224 @@
 <div class="bg-gray-50 min-h-screen p-6">
     <!-- Loader principal -->
     <div *ngIf="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
     </div>
 
     <!-- Loader para acciones -->
     <div *ngIf="loadingAction" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mr-3"></div>
-        <span>Procesando acción...</span>
-      </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 mr-3"></div>
+            <span>Procesando acción...</span>
+        </div>
     </div>
 
     <div *ngIf="!loading && reservation">
-      <!-- Cabecera y botones de acción -->
-      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <div class="flex items-center">
-              <a routerLink="/guard/entries" class="text-primary-600 hover:text-primary-700 mr-2">
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-              <h1 class="text-2xl font-bold text-gray-900">Detalle de Reserva #{{ reservation.id }}</h1>
-            </div>
-            <div class="flex items-center mt-2">
-              <span class="px-2 py-1 text-xs font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
-                {{ getStatusName(reservation.estado || 'PENDIENTE') }}
-              </span>
-              <span class="ml-2 text-sm text-gray-500">{{ formatDate(reservation.fecha) }} | {{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}</span>
-            </div>
-          </div>
+        <!-- Cabecera y botones de acción -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <div class="flex items-center">
+                        <a routerLink="/guard/entries" class="text-primary-600 hover:text-primary-700 mr-2">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-900">Detalle de Reserva #{{ reservation.id }}</h1>
+                    </div>
+                    <div class="flex items-center mt-2">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full"
+                            [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
+                            {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+                        </span>
+                        <span class="ml-2 text-sm text-gray-500">{{ formatDate(reservation.fecha) }} | {{
+                            formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}</span>
+                    </div>
+                </div>
 
-          <div class="mt-4 md:mt-0 flex flex-wrap space-x-2">
-            <!-- Botones de acción según el estado -->
-            <button
-              *ngIf="reservation.estado === 'PENDIENTE'"
-              (click)="startTimeRecord('INGRESO_PLANTA')"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              Registrar Ingreso
-            </button>
+                <div class="mt-4 md:mt-0 flex flex-wrap space-x-2">
+                    <!-- Botones de acción según el estado -->
+                    <button *ngIf="reservation.estado === 'PENDIENTE'" (click)="startTimeRecord('INGRESO_PLANTA')"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                        Registrar Ingreso
+                    </button>
 
-            <button
-              *ngIf="reservation.estado === 'EN_PLANTA' || reservation.estado === 'EN_RECEPCION'"
-              (click)="startTimeRecord('SALIDA_PLANTA')"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-              Registrar Salida
-            </button>
-          </div>
+                    <!-- Corrección propuesta -->
+                    <button
+                        *ngIf="(reservation.estado === 'EN_PLANTA' || reservation.estado === 'EN_RECEPCION' || reservation.estado === 'COMPLETADA') && !loadingAction && !hasSalidaRecord()"
+                        (click)="startTimeRecord('SALIDA_PLANTA')"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                        Registrar Salida
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <!-- Información de la Reserva -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <!-- Datos de la reserva -->
+        <!-- Información de la Reserva -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Datos de la reserva -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Detalles de la Reserva</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Proveedor</p>
+                        <p class="text-base text-gray-900">{{ reservation.proveedorNombre }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Tipo de Servicio</p>
+                        <p class="text-base text-gray-900">{{ reservation.tipoServicioNombre }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Área</p>
+                        <p class="text-base text-gray-900">{{ reservation.areaNombre }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Andén</p>
+                        <p class="text-base text-gray-900">{{ reservation.andenNumero }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Fecha</p>
+                        <p class="text-base text-gray-900">{{ formatDate(reservation.fecha) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Horario</p>
+                        <p class="text-base text-gray-900">{{ formatTime(reservation.horaInicio) }} - {{
+                            formatTime(reservation.horaFin) }}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-sm font-medium text-gray-500">Descripción</p>
+                        <p class="text-base text-gray-900">{{ reservation.descripcion || 'Sin descripción' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos del Transporte y Conductor -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Información del Vehículo</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Placa</p>
+                        <p class="text-base text-gray-900">{{ reservation.transportePlaca }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Tipo</p>
+                        <p class="text-base text-gray-900">{{ reservation.transporteTipo }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Marca</p>
+                        <p class="text-base text-gray-900">{{ reservation.transporteMarca }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Modelo</p>
+                        <p class="text-base text-gray-900">{{ reservation.transporteModelo }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Capacidad</p>
+                        <p class="text-base text-gray-900">{{ reservation.transporteCapacidad || 'No especificada' }}
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Conductor</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Nombre</p>
+                        <p class="text-base text-gray-900">{{ reservation.conductorNombres }} {{
+                            reservation.conductorApellidos }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Cédula</p>
+                        <p class="text-base text-gray-900">{{ reservation.conductorCedula }}</p>
+                    </div>
+                </div>
+
+                <!-- Ayudantes (si hay) -->
+                <div *ngIf="reservation.ayudantes && reservation.ayudantes.length > 0">
+                    <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Ayudantes</h3>
+                    <ul class="divide-y divide-gray-200">
+                        <li *ngFor="let ayudante of reservation.ayudantes" class="py-2">
+                            <p class="text-sm text-gray-900">{{ ayudante.nombres }} {{ ayudante.apellidos }}</p>
+                            <p class="text-xs text-gray-500">Cédula: {{ ayudante.cedula }}</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registros de Tiempo -->
         <div class="bg-white shadow-md rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Detalles de la Reserva</h2>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm font-medium text-gray-500">Proveedor</p>
-              <p class="text-base text-gray-900">{{ reservation.proveedorNombre }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Tipo de Servicio</p>
-              <p class="text-base text-gray-900">{{ reservation.tipoServicioNombre }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Área</p>
-              <p class="text-base text-gray-900">{{ reservation.areaNombre }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Andén</p>
-              <p class="text-base text-gray-900">{{ reservation.andenNumero }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Fecha</p>
-              <p class="text-base text-gray-900">{{ formatDate(reservation.fecha) }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Horario</p>
-              <p class="text-base text-gray-900">{{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-sm font-medium text-gray-500">Descripción</p>
-              <p class="text-base text-gray-900">{{ reservation.descripcion || 'Sin descripción' }}</p>
-            </div>
-          </div>
-        </div>
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Registros de Tiempo</h2>
 
-        <!-- Datos del Transporte y Conductor -->
-        <div class="bg-white shadow-md rounded-lg p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Información del Vehículo</h2>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm font-medium text-gray-500">Placa</p>
-              <p class="text-base text-gray-900">{{ reservation.transportePlaca }}</p>
+            <div *ngIf="timeRecords.length === 0" class="text-center py-8 text-gray-500">
+                No hay registros de tiempo para esta reserva.
             </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Tipo</p>
-              <p class="text-base text-gray-900">{{ reservation.transporteTipo }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Marca</p>
-              <p class="text-base text-gray-900">{{ reservation.transporteMarca }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Modelo</p>
-              <p class="text-base text-gray-900">{{ reservation.transporteModelo }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Capacidad</p>
-              <p class="text-base text-gray-900">{{ reservation.transporteCapacidad || 'No especificada' }}</p>
-            </div>
-          </div>
 
-          <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Conductor</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm font-medium text-gray-500">Nombre</p>
-              <p class="text-base text-gray-900">{{ reservation.conductorNombres }} {{ reservation.conductorApellidos }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Cédula</p>
-              <p class="text-base text-gray-900">{{ reservation.conductorCedula }}</p>
-            </div>
-          </div>
-
-          <!-- Ayudantes (si hay) -->
-          <div *ngIf="reservation.ayudantes && reservation.ayudantes.length > 0">
-            <h3 class="text-md font-medium text-gray-900 mt-6 mb-2">Ayudantes</h3>
-            <ul class="divide-y divide-gray-200">
-              <li *ngFor="let ayudante of reservation.ayudantes" class="py-2">
-                <p class="text-sm text-gray-900">{{ ayudante.nombres }} {{ ayudante.apellidos }}</p>
-                <p class="text-xs text-gray-500">Cédula: {{ ayudante.cedula }}</p>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Registros de Tiempo -->
-      <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Registros de Tiempo</h2>
-
-        <div *ngIf="timeRecords.length === 0" class="text-center py-8 text-gray-500">
-          No hay registros de tiempo para esta reserva.
-        </div>
-
-        <div *ngIf="timeRecords.length > 0" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Iniciado Por</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Inicio</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Fin</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr *ngFor="let record of timeRecords">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {{ getRecordTypeName(record.tipo) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ record.usuarioNombre }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDateTime(record.horaInicio) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDateTime(record.horaFin) || '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ record.duracion ? (record.duracion + ' min') : '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
+            <div *ngIf="timeRecords.length > 0" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tipo</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Iniciado Por</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Hora Inicio</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Hora Fin</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Duración</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let record of timeRecords">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ getRecordTypeName(record.tipo) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ record.usuarioNombre }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ formatDateTime(record.horaInicio) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ formatDateTime(record.horaFin) || '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ record.duracion ? (record.duracion + ' min') : '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <!-- <button
                     *ngIf="!record.horaFin"
                     (click)="finishTimeRecord(record.id, record.tipo)"
                     class="text-primary-600 hover:text-primary-900"
                   >
                     Finalizar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </button> -->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>

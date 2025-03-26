@@ -242,7 +242,7 @@ export class ReceptionDetailComponent implements OnInit {
     switch (type) {
       case 'INGRESO_PLANTA': return 'Ingreso a Planta';
       case 'SALIDA_PLANTA': return 'Salida de Planta';
-      case 'INICIO_RECEPCION': return 'Inicio de Recepción';
+      case 'INICIO_RECEPCION': return 'En Recepción';
       case 'FIN_RECEPCION': return 'Fin de Recepción';
       default: return type;
     }

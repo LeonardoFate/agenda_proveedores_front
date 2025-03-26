@@ -6,8 +6,8 @@ import { ReservationService } from '../../../core/services/reservation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ReservaDetalle } from '../../../core/models/reserva.model';
 import { User } from '../../../core/models/user.model';
-import { Subscription } from 'rxjs';
-import { finalize, catchError } from 'rxjs/operators';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { finalize, catchError, switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-entry-detail',
@@ -109,94 +109,141 @@ export class EntryDetailComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
 
-    console.log('Iniciando registro de tiempo:', {
+    console.log('Procesando registro de tiempo:', {
       reservaId: this.reservationId,
       usuarioId: this.currentUser.id,
       tipo: type
     });
 
+    // Si es salida de planta, primero finalizamos todos los registros activos
+    if (type === 'SALIDA_PLANTA') {
+      this.processSalida();
+    } else {
+      // Si es ingreso a planta u otro tipo, flujo normal
+      this.processIngreso(type);
+    }
+  }
+
+  // Método para verificar si ya se ha registrado una salida
+  hasSalidaRecord(): boolean {
+    if (!this.timeRecords || this.timeRecords.length === 0) {
+      return false;
+    }
+
+    // Buscar si ya existe algún registro de tipo SALIDA_PLANTA
+    return this.timeRecords.some(record => record.tipo === 'SALIDA_PLANTA');
+  }
+
+  // Método para procesar un ingreso a planta
+  private processIngreso(type: string): void {
     const startSub = this.reservationService.startTimeRecord(
       this.reservationId,
-      this.currentUser.id,
+      this.currentUser!.id,
       type
     ).pipe(
-      finalize(() => {
-        if (!this.successMessage && !this.errorMessage) {
-          this.loadingAction = false;
-        }
-      })
-    ).subscribe({
-      next: (response) => {
+      switchMap(response => {
         console.log('Registro de tiempo iniciado:', response);
-        this.successMessage = 'Registro iniciado correctamente';
-
-        // Actualizar la lista de registros
-        this.loadTimeRecords();
 
         // Si es un ingreso a planta, actualizar el estado de la reserva
         if (type === 'INGRESO_PLANTA' && this.reservation?.estado === 'PENDIENTE') {
-          this.updateReservationStatus('EN_PLANTA');
+          return this.reservationService.updateReservationStatus(this.reservationId, 'EN_PLANTA');
         }
+        return of(this.reservation);
+      }),
+      tap(updatedReservation => {
+        if (updatedReservation) {
+          this.reservation = updatedReservation as ReservaDetalle;
+        }
+        this.successMessage = 'Ingreso registrado correctamente';
+      }),
+      // Asegurar que finalize siempre se ejecute, independientemente del resultado
+      finalize(() => {
+        this.loadingAction = false;
+        this.loadTimeRecords();  // Recargar registros después de todas las operaciones
+      })
+    ).subscribe({
+      next: () => {
+        // El caso de éxito ya se maneja en el operador tap() de arriba
+        console.log('Proceso de ingreso completado exitosamente');
       },
       error: (error) => {
-        console.error('Error starting time record', error);
-        this.errorMessage = 'Ocurrió un error al registrar el tiempo. Intente nuevamente.';
-        this.loadingAction = false;
+        console.error('Error en proceso de ingreso:', error);
+        this.errorMessage = 'Ocurrió un error al registrar el ingreso. Intente nuevamente.';
+        // El estado de carga se resetea en finalize()
       }
     });
 
     this.subscriptions.push(startSub);
   }
 
-  // Método para finalizar un registro de tiempo
-  finishTimeRecord(recordId: number, type: string): void {
-    this.loadingAction = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    console.log('Finalizando registro de tiempo ID:', recordId, 'Tipo:', type);
-
-    const finishSub = this.reservationService.finishTimeRecord(recordId)
+  // Método para procesar una salida de planta con finalización automática
+  private processSalida(): void {
+    const salidaSub = this.reservationService.getTimeRecordsByReservation(this.reservationId)
       .pipe(
-        finalize(() => {
-          if (!this.successMessage && !this.errorMessage) {
-            this.loadingAction = false;
+        switchMap(records => {
+          // Buscar registros activos (sin horaFin)
+          const activeRecords = records.filter(r => !r.horaFin);
+
+          if (activeRecords.length > 0) {
+            // Finalizar todos los registros activos en paralelo
+            const finishRequests = activeRecords.map(record =>
+              this.reservationService.finishTimeRecord(record.id)
+            );
+
+            if (finishRequests.length > 0) {
+              return forkJoin(finishRequests);
+            }
           }
+          return of(null);
+        }),
+        // Luego crear el registro de salida
+        switchMap(() => this.reservationService.startTimeRecord(
+          this.reservationId,
+          this.currentUser!.id,
+          'SALIDA_PLANTA'
+        )),
+        // Finalizar automáticamente el registro de salida recién creado
+        switchMap(response => {
+          if (response && response.id) {
+            return this.reservationService.finishTimeRecord(response.id);
+          }
+          return of(null);
+        }),
+        // Actualizar el estado de la reserva si es necesario
+        switchMap(() => {
+          // Consultar la reserva actualizada para asegurarse de mostrar el estado correcto
+          return this.reservationService.getReservationById(this.reservationId);
+        }),
+        tap(updatedReservation => {
+          if (updatedReservation) {
+            this.reservation = updatedReservation;
+            console.log('Estado de reserva actualizado después de la salida:', this.reservation.estado);
+          }
+          this.successMessage = 'Salida registrada correctamente';
+        }),
+        // Asegurar que finalize siempre se ejecute, independientemente del resultado
+        finalize(() => {
+          this.loadingAction = false;
+          this.loadTimeRecords();  // Recargar registros después de todas las operaciones
         })
       )
       .subscribe({
-        next: (response) => {
-          console.log('Registro de tiempo finalizado:', response);
-          this.successMessage = 'Registro finalizado correctamente';
-
-          // Actualizar la lista de registros
-          this.loadTimeRecords();
-
-          // Si es una salida de planta, actualizar el estado a COMPLETADA solo si
-          // se cumple la condición y no hay errores
-          if (type === 'SALIDA_PLANTA' &&
-              (this.reservation?.estado === 'EN_PLANTA' || this.reservation?.estado === 'EN_RECEPCION')) {
-
-            // Pequeño retraso para asegurar que el registro se actualizó
-            setTimeout(() => {
-              this.updateReservationStatus('COMPLETADA');
-            }, 500);
-          }
+        next: () => {
+          // El caso de éxito ya se maneja en el operador tap() de arriba
+          console.log('Proceso de salida completado exitosamente');
         },
         error: (error) => {
-          console.error('Error detallado al finalizar registro:', error);
-
+          console.error('Error en proceso de salida:', error);
           if (error.status === 400 && error.error && error.error.mensaje) {
             this.errorMessage = error.error.mensaje;
           } else {
-            this.errorMessage = 'Ocurrió un error al finalizar el registro de tiempo. Intente nuevamente.';
+            this.errorMessage = 'Ocurrió un error al registrar la salida. Intente nuevamente.';
           }
-
-          this.loadingAction = false;
+          // El estado de carga se resetea en finalize()
         }
       });
 
-    this.subscriptions.push(finishSub);
+    this.subscriptions.push(salidaSub);
   }
 
   // Método para actualizar el estado de la reserva
@@ -207,6 +254,9 @@ export class EntryDetailComponent implements OnInit, OnDestroy {
     }
 
     console.log('Actualizando estado de reserva a:', newStatus);
+    this.loadingAction = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
     const updateSub = this.reservationService.updateReservationStatus(this.reservationId, newStatus)
       .pipe(

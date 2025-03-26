@@ -6,6 +6,8 @@ import { ReservationService } from '../../../core/services/reservation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Reserva } from '../../../core/models/reserva.model';
 import { User } from '../../../core/models/user.model';
+import { finalize, switchMap, tap } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-entry-management',
@@ -128,7 +130,7 @@ export class EntryManagementComponent implements OnInit {
     });
   }
 
-  // Método para iniciar un registro de tiempo
+  // Método para iniciar un registro de tiempo (versión mejorada)
   startTimeRecord(reservationId: number, type: string): void {
     if (!this.currentUser) {
       alert('Debe iniciar sesión para realizar esta acción.');
@@ -137,24 +139,90 @@ export class EntryManagementComponent implements OnInit {
 
     this.loading = true;
 
-    this.reservationService.startTimeRecord(
-      reservationId,
-      this.currentUser.id,
-      type
-    ).subscribe({
-      next: () => {
-        // Si es un ingreso a planta, actualizar el estado de la reserva
-        if (type === 'INGRESO_PLANTA') {
-          this.updateReservationStatus(reservationId, 'EN_PLANTA');
+    // Si es salida de planta, primero buscamos registros activos para finalizar
+    if (type === 'SALIDA_PLANTA') {
+      // Obtenemos los registros de tiempo de esta reserva
+      this.reservationService.getTimeRecordsByReservation(reservationId)
+        .pipe(
+          switchMap(records => {
+            // Buscamos registros activos (sin horaFin)
+            const activeRecords = records.filter(r => !r.horaFin);
+
+            if (activeRecords.length > 0) {
+              // Finalizar todos los registros activos
+              const finishRequests = activeRecords.map(record =>
+                this.reservationService.finishTimeRecord(record.id)
+              );
+
+              if (finishRequests.length > 0) {
+                return forkJoin(finishRequests);
+              }
+            }
+            return of(null);
+          }),
+          // Luego iniciamos el registro de salida
+          switchMap(() => this.reservationService.startTimeRecord(
+            reservationId,
+            this.currentUser!.id,
+            type
+          )),
+          // Y finalmente actualizamos el estado a COMPLETADA
+          switchMap(() => this.reservationService.updateReservationStatus(
+            reservationId,
+            'COMPLETADA'
+          )),
+          tap(updatedReservation => {
+            // Actualizar la reserva en la lista local
+            const index = this.reservations.findIndex(r => r.id === reservationId);
+            if (index !== -1) {
+              this.reservations[index] = updatedReservation;
+            }
+          }),
+          finalize(() => {
+            this.loading = false;
+            this.applyFilters();
+          })
+        )
+        .subscribe({
+          error: (error) => {
+            console.error('Error procesando la salida:', error);
+            this.loading = false;
+            alert('Ocurrió un error al registrar la salida. Intente nuevamente.');
+          }
+        });
+    } else {
+      // Si es ingreso a planta, el flujo es más simple
+      this.reservationService.startTimeRecord(
+        reservationId,
+        this.currentUser.id,
+        type
+      )
+      .pipe(
+        // Luego actualizamos el estado a EN_PLANTA
+        switchMap(() => this.reservationService.updateReservationStatus(
+          reservationId,
+          'EN_PLANTA'
+        )),
+        tap(updatedReservation => {
+          // Actualizar la reserva en la lista local
+          const index = this.reservations.findIndex(r => r.id === reservationId);
+          if (index !== -1) {
+            this.reservations[index] = updatedReservation;
+          }
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.applyFilters();
+        })
+      )
+      .subscribe({
+        error: (error) => {
+          console.error('Error procesando el ingreso:', error);
+          this.loading = false;
+          alert('Ocurrió un error al registrar el ingreso. Intente nuevamente.');
         }
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error starting time record', error);
-        this.loading = false;
-        alert('Ocurrió un error al registrar el tiempo. Intente nuevamente.');
-      }
-    });
+      });
+    }
   }
 
   // Mostrar el tiempo en formato HH:MM
