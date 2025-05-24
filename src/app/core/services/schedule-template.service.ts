@@ -42,4 +42,16 @@ export class ScheduleTemplateService {
   eliminarHorarioPlantilla(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+  // En: src/app/core/services/schedule-template.service.ts
+// Agregar este método:
+
+cargarDesdeExcel(archivo: File): Observable<any> {
+  const formData = new FormData();
+  formData.append('archivo', archivo);
+
+  return this.http.post<any>(
+    `${this.apiUrl}/upload-excel`,
+    formData
+  );
+}
 }

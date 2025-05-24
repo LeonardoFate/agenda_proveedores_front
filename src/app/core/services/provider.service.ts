@@ -29,6 +29,7 @@ export class ProviderService {
   private andenesUrl = `${environment.apiUrl}/api/andenes`;
   private documentosUrl = `${environment.apiUrl}/api/documentos`;
   private proveedoresUrl = `${environment.apiUrl}/api/proveedores`;
+  private plantillasUrl = `${environment.apiUrl}/api/admin/plantillas`;
 
   constructor(private http: HttpClient) {}
 
@@ -315,6 +316,104 @@ export class ProviderService {
       .pipe(
         catchError(error => {
           console.error('Error al eliminar documento:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ===== MÉTODOS PARA PROVEEDORES =====
+
+  // Obtener todos los proveedores
+  getProveedores(): Observable<any[]> {
+    return this.http.get<any[]>(this.proveedoresUrl)
+      .pipe(
+        tap(proveedores => console.log('Proveedores obtenidos:', proveedores.length)),
+        catchError(error => {
+          console.error('Error al obtener proveedores:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ===== MÉTODOS PARA PLANTILLAS DE HORARIO =====
+
+  // Subir Excel de plantillas
+  uploadPlantillaExcel(archivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    return this.http.post<any>(`${this.plantillasUrl}/upload-excel`, formData)
+      .pipe(
+        tap(response => console.log('Excel procesado:', response)),
+        catchError(error => {
+          console.error('Error al procesar Excel:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener todas las plantillas
+  getPlantillasHorario(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.plantillasUrl}/semana`)
+      .pipe(
+        tap(plantillas => console.log('Plantillas obtenidas:', plantillas.length)),
+        catchError(error => {
+          console.error('Error al obtener plantillas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Crear plantilla individual
+  createPlantillaHorario(plantilla: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post<any>(this.plantillasUrl, plantilla, { headers })
+      .pipe(
+        tap(response => console.log('Plantilla creada:', response)),
+        catchError(error => {
+          console.error('Error al crear plantilla:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Actualizar plantilla
+  updatePlantillaHorario(id: number, plantilla: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.put<any>(`${this.plantillasUrl}/${id}`, plantilla, { headers })
+      .pipe(
+        tap(response => console.log('Plantilla actualizada:', response)),
+        catchError(error => {
+          console.error('Error al actualizar plantilla:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Eliminar plantilla
+  deletePlantillaHorario(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.plantillasUrl}/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error('Error al eliminar plantilla:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener estadísticas de plantillas
+  getPlantillasEstadisticas(): Observable<any> {
+    return this.http.get<any>(`${this.plantillasUrl}/estadisticas`)
+      .pipe(
+        tap(stats => console.log('Estadísticas de plantillas:', stats)),
+        catchError(error => {
+          console.error('Error al obtener estadísticas de plantillas:', error);
           return throwError(() => error);
         })
       );
