@@ -66,5 +66,11 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./reports/report-dashboard.component').then(m => m.ReportDashboardComponent),
     canActivate: [authGuard],
     data: { requiredRole: 'ADMIN' }
+  },
+  {
+    path: 'schedule-templates',
+    loadComponent: () => import('./schedules/schedule-template.component').then(m => m.ScheduleTemplateComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'ADMIN' }
   }
 ];
