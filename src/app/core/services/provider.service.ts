@@ -3,7 +3,21 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Reserva, ReservaDetalle, DisponibilidadAnden } from '../../core/models/reserva.model';
+import { Reserva, ReservaDetalle } from '../../core/models/reserva.model';
+import { HorarioProveedor } from '../models/horario-proveedor.model';
+
+export interface ProviderStatistics {
+  totalReservas: number;
+  completadas: number;
+  canceladas: number;
+  pendientesConfirmacion: number;
+  confirmadas: number;
+  distribucionPorEstado: { [key: string]: number };
+  periodoConsultado: {
+    fechaInicio: string;
+    fechaFin: string;
+  };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +32,113 @@ export class ProviderService {
 
   constructor(private http: HttpClient) {}
 
-  // Reservas del proveedor
+  // ===== NUEVOS MÉTODOS PARA PLANTILLAS DE HORARIOS =====
+
+  // Obtener horario asignado para una fecha específica
+  getMySchedule(fecha: string): Observable<HorarioProveedor> {
+    const params = new HttpParams().set('fecha', fecha);
+
+    return this.http.get<HorarioProveedor>(`${this.reservasUrl}/mi-horario`, { params })
+      .pipe(
+        tap(horario => console.log('Horario obtenido:', horario)),
+        catchError(error => {
+          console.error('Error al obtener horario:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener horarios de la semana completa
+  getMyWeekSchedule(fechaInicio: string): Observable<HorarioProveedor[]> {
+    const params = new HttpParams().set('fechaInicio', fechaInicio);
+
+    return this.http.get<HorarioProveedor[]>(`${this.reservasUrl}/mi-horario-semanal`, { params })
+      .pipe(
+        tap(horarios => console.log('Horarios semanales obtenidos:', horarios.length)),
+        catchError(error => {
+          console.error('Error al obtener horarios semanales:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener reserva pendiente de confirmación
+  getPendingReservation(fecha: string): Observable<ReservaDetalle> {
+    const params = new HttpParams().set('fecha', fecha);
+
+    return this.http.get<ReservaDetalle>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
+      .pipe(
+        tap(reserva => console.log('Reserva pendiente obtenida:', reserva)),
+        catchError(error => {
+          console.error('Error al obtener reserva pendiente:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Confirmar reserva (completar datos de transporte)
+  confirmReservation(reservaData: Reserva): Observable<ReservaDetalle> {
+    console.log('Confirmando reserva con datos:', reservaData);
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post<ReservaDetalle>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
+      .pipe(
+        tap(response => console.log('Reserva confirmada exitosamente:', response)),
+        catchError(error => {
+          console.error('Error al confirmar reserva:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener mis reservas con filtros opcionales
+  getMyReservationsFiltered(fechaInicio?: string, fechaFin?: string): Observable<Reserva[]> {
+    let params = new HttpParams();
+
+    if (fechaInicio) {
+      params = params.set('fechaInicio', fechaInicio);
+    }
+    if (fechaFin) {
+      params = params.set('fechaFin', fechaFin);
+    }
+
+    return this.http.get<Reserva[]>(`${this.reservasUrl}/mis-reservas`, { params })
+      .pipe(
+        tap(reservas => console.log('Mis reservas obtenidas:', reservas.length)),
+        catchError(error => {
+          console.error('Error al obtener mis reservas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // Obtener mis estadísticas
+  getMyStatistics(fechaInicio?: string, fechaFin?: string): Observable<ProviderStatistics> {
+    let params = new HttpParams();
+
+    if (fechaInicio) {
+      params = params.set('fechaInicio', fechaInicio);
+    }
+    if (fechaFin) {
+      params = params.set('fechaFin', fechaFin);
+    }
+
+    return this.http.get<ProviderStatistics>(`${this.reservasUrl}/mis-estadisticas`, { params })
+      .pipe(
+        tap(stats => console.log('Estadísticas obtenidas:', stats)),
+        catchError(error => {
+          console.error('Error al obtener estadísticas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ===== MÉTODOS EXISTENTES MANTENIDOS =====
+
+  // Reservas del proveedor (método legacy)
   getMyReservations(proveedorId: number): Observable<Reserva[]> {
     console.log('Obteniendo reservas para proveedor ID:', proveedorId);
     return this.http.get<Reserva[]>(`${this.reservasUrl}/proveedor/${proveedorId}`)
@@ -42,12 +162,11 @@ export class ProviderService {
       );
   }
 
-  // Crear una nueva reserva con mejor manejo de errores
+  // Crear una nueva reserva (solo para admin ahora)
   createReservation(reservation: Reserva): Observable<ReservaDetalle> {
     console.log('URL de creación de reservas:', this.reservasUrl);
     console.log('Datos de la reserva a crear:', JSON.stringify(reservation));
 
-    // Agregar el Content-Type correcto
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
@@ -57,14 +176,6 @@ export class ProviderService {
         tap(response => console.log('Respuesta del servidor:', response)),
         catchError(error => {
           console.error('Error completo al crear reserva:', error);
-
-          // Información más detallada según el tipo de error
-          if (error.status === 404) {
-            console.error('Endpoint no encontrado. Verifique la URL:', this.reservasUrl);
-          } else if (error.status === 400) {
-            console.error('Error en el formato de datos:', error.error);
-          }
-
           return throwError(() => error);
         })
       );
@@ -127,27 +238,6 @@ export class ProviderService {
       .pipe(
         catchError(error => {
           console.error('Error al obtener andenes por área:', error);
-          return throwError(() => error);
-        })
-      );
-  }
-
-  // Verificar disponibilidad de andenes
-  checkAvailability(fecha: string, areaId: number, tipoServicioId?: number): Observable<DisponibilidadAnden[]> {
-    let params = new HttpParams()
-      .set('fecha', fecha)
-      .set('areaId', areaId.toString());
-
-    if (tipoServicioId) {
-      params = params.set('tipoServicioId', tipoServicioId.toString());
-    }
-
-    console.log('Verificando disponibilidad con params:', { fecha, areaId, tipoServicioId });
-
-    return this.http.get<DisponibilidadAnden[]>(`${this.reservasUrl}/disponibilidad`, { params })
-      .pipe(
-        catchError(error => {
-          console.error('Error al verificar disponibilidad:', error);
           return throwError(() => error);
         })
       );
