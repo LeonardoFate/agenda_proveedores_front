@@ -1,4 +1,7 @@
-// src/app/features/admin/schedules/schedule-template.component.ts
+// =====================================================================
+// schedule-template.component.ts - COMPONENTE COMPLETO
+// =====================================================================
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,9 +30,15 @@ export class ScheduleTemplateComponent implements OnInit {
   isEditing = false;
   currentTemplateId: number | null = null;
 
+  // Propiedades para carga de Excel
   selectedFile: File | null = null;
   previewData: any[] = [];
   showPreview = false;
+
+  // ✅ NUEVAS PROPIEDADES para selección múltiple
+  selectedPlantillas: number[] = [];
+  selectAll: boolean = false;
+  showDeleteButton: boolean = false;
 
   diasSemana = Object.values(DiaSemana);
 
@@ -54,6 +63,10 @@ export class ScheduleTemplateComponent implements OnInit {
     this.loadProveedores();
     this.loadPlantillas();
   }
+
+  // =====================================================================
+  // MÉTODOS DE CARGA DE DATOS
+  // =====================================================================
 
   loadAreas(): void {
     this.areaService.getAreas().subscribe({
@@ -81,11 +94,13 @@ export class ScheduleTemplateComponent implements OnInit {
 
   loadPlantillas(): void {
     this.loading = true;
-    // ✅ CAMBIO: Usar el método correcto del ProviderService
     this.providerService.getPlantillasHorario().subscribe({
       next: (plantillas: any) => {
         this.plantillas = plantillas;
         this.loading = false;
+
+        // ✅ Limpiar selección al recargar
+        this.clearSelection();
       },
       error: (error: any) => {
         console.error('Error loading templates', error);
@@ -95,7 +110,9 @@ export class ScheduleTemplateComponent implements OnInit {
     });
   }
 
-  // ===== FUNCIONALIDADES DE UPLOAD EXCEL =====
+  // =====================================================================
+  // MÉTODOS PARA UPLOAD DE EXCEL
+  // =====================================================================
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
@@ -160,7 +177,6 @@ export class ScheduleTemplateComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    // ✅ CAMBIO: Usar el método correcto del ProviderService
     this.providerService.uploadPlantillaExcel(this.selectedFile).subscribe({
       next: (response: any) => {
         this.successMessage = `${response.plantillasCargadas} plantillas cargadas exitosamente.`;
@@ -182,14 +198,20 @@ export class ScheduleTemplateComponent implements OnInit {
     });
   }
 
-  // ===== FUNCIONALIDADES CRUD MANUAL =====
+  closePreview(): void {
+    this.showPreview = false;
+    this.previewData = [];
+  }
+
+  // =====================================================================
+  // MÉTODOS CRUD PARA PLANTILLAS INDIVIDUALES
+  // =====================================================================
 
   onSubmit(): void {
     if (this.templateForm.valid) {
       this.loading = true;
 
       if (this.isEditing && this.currentTemplateId) {
-        // ✅ CAMBIO: Usar el método correcto del ProviderService
         this.providerService.updatePlantillaHorario(
           this.currentTemplateId,
           this.templateForm.value
@@ -206,7 +228,6 @@ export class ScheduleTemplateComponent implements OnInit {
           }
         });
       } else {
-        // ✅ CAMBIO: Usar el método correcto del ProviderService
         this.providerService.createPlantillaHorario(this.templateForm.value).subscribe({
           next: () => {
             this.successMessage = 'Plantilla creada exitosamente.';
@@ -237,12 +258,14 @@ export class ScheduleTemplateComponent implements OnInit {
       tiempoDescarga: plantilla.tiempoDescarga,
       activo: plantilla.activo
     });
+
+    // Scroll al formulario
+    document.querySelector('.bg-white')?.scrollIntoView({ behavior: 'smooth' });
   }
 
   deletePlantilla(id: number): void {
     if (confirm('¿Está seguro de eliminar esta plantilla de horario?')) {
       this.loading = true;
-      // ✅ CAMBIO: Usar el método correcto del ProviderService
       this.providerService.deletePlantillaHorario(id).subscribe({
         next: () => {
           this.successMessage = 'Plantilla eliminada exitosamente.';
@@ -263,7 +286,116 @@ export class ScheduleTemplateComponent implements OnInit {
     this.isEditing = false;
     this.currentTemplateId = null;
     this.loading = false;
+
+    // Limpiar selección al resetear
+    this.clearSelection();
   }
+
+  // =====================================================================
+  // ✅ NUEVOS MÉTODOS PARA SELECCIÓN Y ELIMINACIÓN MÚLTIPLE
+  // =====================================================================
+
+  /**
+   * Seleccionar/deseleccionar una plantilla individual
+   */
+  onPlantillaSelect(plantillaId: number, checked: boolean): void {
+    if (checked) {
+      this.selectedPlantillas.push(plantillaId);
+    } else {
+      this.selectedPlantillas = this.selectedPlantillas.filter(id => id !== plantillaId);
+      this.selectAll = false; // Desmarcar "Seleccionar todo"
+    }
+
+    this.updateSelectionState();
+  }
+
+  /**
+   * Seleccionar/deseleccionar todas las plantillas
+   */
+  onSelectAll(checked: boolean): void {
+    this.selectAll = checked;
+
+    if (checked) {
+      this.selectedPlantillas = this.plantillas.map(p => p.id!).filter(id => id !== undefined);
+    } else {
+      this.selectedPlantillas = [];
+    }
+
+    this.updateSelectionState();
+  }
+
+  /**
+   * Actualizar el estado de la selección
+   */
+  private updateSelectionState(): void {
+    this.showDeleteButton = this.selectedPlantillas.length > 0;
+
+    // Actualizar estado de "Seleccionar todo"
+    if (this.selectedPlantillas.length === 0) {
+      this.selectAll = false;
+    } else if (this.selectedPlantillas.length === this.plantillas.length) {
+      this.selectAll = true;
+    }
+  }
+
+  /**
+   * Verificar si una plantilla está seleccionada
+   */
+  isPlantillaSelected(plantillaId: number): boolean {
+    return this.selectedPlantillas.includes(plantillaId);
+  }
+
+  /**
+   * Eliminar plantillas seleccionadas
+   */
+  deleteSelectedPlantillas(): void {
+    if (this.selectedPlantillas.length === 0) {
+      this.errorMessage = 'No hay plantillas seleccionadas para eliminar.';
+      return;
+    }
+
+    const count = this.selectedPlantillas.length;
+    const message = count === 1
+      ? '¿Está seguro de eliminar la plantilla seleccionada?'
+      : `¿Está seguro de eliminar las ${count} plantillas seleccionadas?`;
+
+    if (confirm(message)) {
+      this.loading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      this.providerService.deletePlantillasMultiple(this.selectedPlantillas).subscribe({
+        next: (response) => {
+          const eliminadas = response.eliminadas || count;
+          this.successMessage = `${eliminadas} plantilla${eliminadas !== 1 ? 's' : ''} eliminada${eliminadas !== 1 ? 's' : ''} exitosamente.`;
+
+          // Limpiar selección
+          this.clearSelection();
+
+          // Recargar plantillas
+          this.loadPlantillas();
+        },
+        error: (error) => {
+          console.error('Error deleting multiple templates', error);
+          this.errorMessage = error.error?.detalle || 'Error al eliminar las plantillas seleccionadas.';
+          this.loading = false;
+        }
+      });
+    }
+  }
+
+  /**
+   * Limpiar selección
+   */
+  clearSelection(): void {
+    this.selectedPlantillas = [];
+    this.selectAll = false;
+    this.showDeleteButton = false;
+  }
+
+  // =====================================================================
+  // MÉTODOS AUXILIARES
+  // =====================================================================
 
   markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
@@ -276,8 +408,54 @@ export class ScheduleTemplateComponent implements OnInit {
     return proveedor ? proveedor.nombre : 'Proveedor desconocido';
   }
 
-  closePreview(): void {
-    this.showPreview = false;
-    this.previewData = [];
+  /**
+   * Obtener estado visual del checkbox "Seleccionar todo"
+   */
+  getSelectAllState(): { checked: boolean; indeterminate: boolean } {
+    const selected = this.selectedPlantillas.length;
+    const total = this.plantillas.length;
+
+    return {
+      checked: selected === total && total > 0,
+      indeterminate: selected > 0 && selected < total
+    };
+  }
+
+  /**
+   * Limpiar todos los mensajes
+   */
+  clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  /**
+   * Auto-limpiar mensajes después de un tiempo
+   */
+  private autoHideMessages(timeout: number = 5000): void {
+    setTimeout(() => {
+      this.clearMessages();
+    }, timeout);
+  }
+
+  /**
+   * TrackBy function para optimizar el rendimiento de *ngFor
+   */
+  trackByPlantillaId(index: number, plantilla: any): number {
+    return plantilla.id;
+  }
+
+  /**
+   * Obtener número de plantillas activas
+   */
+  getActivePlantillasCount(): number {
+    return this.plantillas.filter(p => p.activo).length;
+  }
+
+  /**
+   * Obtener número de plantillas inactivas
+   */
+  getInactivePlantillasCount(): number {
+    return this.plantillas.filter(p => !p.activo).length;
   }
 }

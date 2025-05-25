@@ -418,4 +418,20 @@ export class ProviderService {
         })
       );
   }
+deletePlantillasMultiple(ids: number[]): Observable<any> {
+  console.log('🔄 Eliminando plantillas (request directo):', ids);
+
+  return this.http.request('DELETE', `${this.plantillasUrl}/bulk-delete`, {
+    body: ids
+  }).pipe(
+    tap(response => {
+      console.log('✅ Eliminación exitosa:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error en eliminación:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
 }
