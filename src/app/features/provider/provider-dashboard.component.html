@@ -1,228 +1,271 @@
+<!-- src/app/features/provider/provider-dashboard.component.html - ACTUALIZADO -->
 <div class="bg-gray-50 min-h-screen p-6">
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Panel de Proveedor</h1>
-      <p class="text-gray-600">
-        Bienvenido, {{ providerInfo?.nombre || currentUser?.nombre }} | {{ currentDate | date:'EEEE, d MMMM yyyy' }}
-      </p>
+  <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Panel de Proveedor</h1>
+    <p class="text-gray-600">
+      Bienvenido, {{ providerInfo?.nombre || currentUser?.nombre }} | {{ currentDate | date:'EEEE, d MMMM yyyy' }}
+    </p>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- ✅ NUEVAS ESTADÍSTICAS DE RESERVAS -->
+    <div class="mb-6">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">Resumen de Reservas</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Pendientes de Confirmación -->
+        <div class="bg-white shadow rounded-lg p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 rounded-md bg-orange-100 p-3">
+              <svg class="h-6 w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Por Confirmar</h3>
+              <p class="text-2xl font-semibold text-gray-700">{{ stats.pendingConfirmation }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirmadas -->
+        <div class="bg-white shadow rounded-lg p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
+              <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Confirmadas</h3>
+              <p class="text-2xl font-semibold text-gray-700">{{ stats.confirmedReservations }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- En Progreso -->
+        <div class="bg-white shadow rounded-lg p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 rounded-md bg-yellow-100 p-3">
+              <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">En Progreso</h3>
+              <p class="text-2xl font-semibold text-gray-700">{{ stats.inProgressReservations }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completadas -->
+        <div class="bg-white shadow rounded-lg p-4">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
+              <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-900">Completadas</h3>
+              <p class="text-2xl font-semibold text-gray-700">{{ stats.completedReservations }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Loader -->
-    <div *ngIf="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    <!-- ✅ ALERTA PARA HORARIOS PENDIENTES DE CONFIRMACIÓN -->
+    <div *ngIf="hasSchedulesToConfirm()" class="mb-6">
+      <div class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-orange-700">
+              <strong>Tiene horarios asignados que requieren confirmación.</strong>
+              Complete los datos del vehículo y conductor para confirmar sus reservas.
+            </p>
+            <div class="mt-2">
+              <a routerLink="/provider/schedule" class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                Confirmar Horarios
+                <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div *ngIf="!loading">
-      <!-- Estadísticas de Reservas -->
-      <div class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">Resumen de Reservas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Reservas Pendientes -->
-          <div class="bg-white shadow rounded-lg p-4">
+    <!-- Próximas Reservas y Actividad Reciente -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Próximas Reservas -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b">
+          <h3 class="text-lg font-medium text-gray-900">Próximas Reservas</h3>
+        </div>
+        <div *ngIf="getUpcomingReservations().length === 0" class="p-6 text-center text-gray-500">
+          No tienes reservas próximas.
+        </div>
+        <ul *ngIf="getUpcomingReservations().length > 0" class="divide-y divide-gray-200">
+          <li *ngFor="let reservation of getUpcomingReservations()" class="p-4 hover:bg-gray-50">
+            <a [routerLink]="['/provider/reservation', reservation.id]" class="block">
+              <div class="flex items-center">
+                <div class="text-center font-medium text-gray-800 w-20">
+                  {{ formatDate(reservation.fecha) }}
+                </div>
+                <div class="text-center font-medium text-sm text-gray-800 w-16">
+                  {{ formatTime(reservation.horaInicio) }}
+                </div>
+                <div class="ml-4 flex-1">
+                  <div class="text-sm font-medium text-gray-900">{{ reservation.areaNombre }}</div>
+                  <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
+                </div>
+                <div>
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                        [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
+                    {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+                  </span>
+                </div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <div class="px-6 py-3 bg-gray-50 text-right">
+          <a routerLink="/provider/my-reservations" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+            Ver todas las reservas
+          </a>
+        </div>
+      </div>
+
+      <!-- Reservas Recientes -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b">
+          <h3 class="text-lg font-medium text-gray-900">Visitas Recientes</h3>
+        </div>
+        <div *ngIf="getRecentReservations().length === 0" class="p-6 text-center text-gray-500">
+          No tienes visitas recientes.
+        </div>
+        <ul *ngIf="getRecentReservations().length > 0" class="divide-y divide-gray-200">
+          <li *ngFor="let reservation of getRecentReservations()" class="p-4 hover:bg-gray-50">
+            <a [routerLink]="['/provider/reservation', reservation.id]" class="block">
+              <div class="flex items-center">
+                <div class="text-center font-medium text-gray-800 w-20">
+                  {{ formatDate(reservation.fecha) }}
+                </div>
+                <div class="text-center font-medium text-sm text-gray-800 w-16">
+                  {{ formatTime(reservation.horaInicio) }}
+                </div>
+                <div class="ml-4 flex-1">
+                  <div class="text-sm font-medium text-gray-900">{{ reservation.areaNombre }}</div>
+                  <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
+                </div>
+                <div>
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                        [ngClass]="getStatusClass(reservation.estado || 'COMPLETADA')">
+                    {{ getStatusName(reservation.estado || 'COMPLETADA') }}
+                  </span>
+                </div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <div class="px-6 py-3 bg-gray-50 text-right">
+          <a routerLink="/provider/my-reservations" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+            Ver historial completo
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ ACCIONES RÁPIDAS ACTUALIZADAS -->
+    <div>
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">Acciones Rápidas</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Confirmar Horarios Asignados -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="p-5">
             <div class="flex items-center">
-              <div class="flex-shrink-0 rounded-md bg-yellow-100 p-3">
-                <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div class="flex-shrink-0 rounded-md bg-orange-100 p-3">
+                <svg class="h-6 w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div class="ml-4">
-                <h3 class="text-lg font-medium text-gray-900">Próximas</h3>
-                <p class="text-2xl font-semibold text-gray-700">{{ stats.upcomingReservations }}</p>
+              <div class="ml-5">
+                <h3 class="text-lg font-medium text-gray-900">Confirmar Horarios</h3>
+                <p class="text-sm text-gray-500">Complete sus horarios asignados</p>
               </div>
             </div>
           </div>
+          <div class="bg-gray-50 p-4">
+            <a routerLink="/provider/schedule" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+              <span>Revisar Horarios</span>
+              <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
 
-          <!-- Reservas En Progreso -->
-          <div class="bg-white shadow rounded-lg p-4">
+        <!-- Mis Reservas -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="p-5">
             <div class="flex items-center">
               <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
                 <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <div class="ml-4">
-                <h3 class="text-lg font-medium text-gray-900">En Progreso</h3>
-                <p class="text-2xl font-semibold text-gray-700">{{ stats.inProgressReservations }}</p>
+              <div class="ml-5">
+                <h3 class="text-lg font-medium text-gray-900">Mis Reservas</h3>
+                <p class="text-sm text-gray-500">Ver y gestionar mis reservas</p>
               </div>
             </div>
           </div>
+          <div class="bg-gray-50 p-4">
+            <a routerLink="/provider/my-reservations" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+              <span>Ver Mis Reservas</span>
+              <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          </div>
+        </div>
 
-          <!-- Reservas Completadas -->
-          <div class="bg-white shadow rounded-lg p-4">
+        <!-- Mis Estadísticas -->
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="p-5">
             <div class="flex items-center">
-              <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
-                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              <div class="flex-shrink-0 rounded-md bg-purple-100 p-3">
+                <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <div class="ml-4">
-                <h3 class="text-lg font-medium text-gray-900">Completadas</h3>
-                <p class="text-2xl font-semibold text-gray-700">{{ stats.completedReservations }}</p>
+              <div class="ml-5">
+                <h3 class="text-lg font-medium text-gray-900">Mis Estadísticas</h3>
+                <p class="text-sm text-gray-500">Ver rendimiento y métricas</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Próximas Reservas y Actividad Reciente -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <!-- Próximas Reservas -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="px-6 py-4 border-b">
-            <h3 class="text-lg font-medium text-gray-900">Próximas Reservas</h3>
-          </div>
-          <div *ngIf="getUpcomingReservations().length === 0" class="p-6 text-center text-gray-500">
-            No tienes reservas pendientes.
-          </div>
-          <ul *ngIf="getUpcomingReservations().length > 0" class="divide-y divide-gray-200">
-            <li *ngFor="let reservation of getUpcomingReservations()" class="p-4 hover:bg-gray-50">
-              <a [routerLink]="['/provider/reservation', reservation.id]" class="block">
-                <div class="flex items-center">
-                  <div class="text-center font-medium text-gray-800 w-20">
-                    {{ formatDate(reservation.fecha) }}
-                  </div>
-                  <div class="text-center font-medium text-sm text-gray-800 w-16">
-                    {{ formatTime(reservation.horaInicio) }}
-                  </div>
-                  <div class="ml-4 flex-1">
-                    <div class="text-sm font-medium text-gray-900">{{ reservation.areaNombre }}</div>
-                    <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
-                  </div>
-                  <div>
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                          [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
-                      {{ getStatusName(reservation.estado || 'PENDIENTE') }}
-                    </span>
-                  </div>
-                </div>
-              </a>
-            </li>
-          </ul>
-          <div class="px-6 py-3 bg-gray-50 text-right">
-            <a routerLink="/provider/my-reservations" class="text-sm font-medium text-primary-600 hover:text-primary-500">
-              Ver todas las reservas
+          <div class="bg-gray-50 p-4">
+            <a routerLink="/provider/statistics" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+              <span>Ver Estadísticas</span>
+              <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
             </a>
           </div>
-        </div>
-
-        <!-- Reservas Recientes -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="px-6 py-4 border-b">
-            <h3 class="text-lg font-medium text-gray-900">Visitas Recientes</h3>
-          </div>
-          <div *ngIf="getRecentReservations().length === 0" class="p-6 text-center text-gray-500">
-            No tienes visitas recientes.
-          </div>
-          <ul *ngIf="getRecentReservations().length > 0" class="divide-y divide-gray-200">
-            <li *ngFor="let reservation of getRecentReservations()" class="p-4 hover:bg-gray-50">
-              <a [routerLink]="['/provider/reservation', reservation.id]" class="block">
-                <div class="flex items-center">
-                  <div class="text-center font-medium text-gray-800 w-20">
-                    {{ formatDate(reservation.fecha) }}
-                  </div>
-                  <div class="text-center font-medium text-sm text-gray-800 w-16">
-                    {{ formatTime(reservation.horaInicio) }}
-                  </div>
-                  <div class="ml-4 flex-1">
-                    <div class="text-sm font-medium text-gray-900">{{ reservation.areaNombre }}</div>
-                    <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
-                  </div>
-                  <div>
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                          [ngClass]="getStatusClass(reservation.estado || 'COMPLETADA')">
-                      {{ getStatusName(reservation.estado || 'COMPLETADA') }}
-                    </span>
-                  </div>
-                </div>
-              </a>
-            </li>
-          </ul>
-          <div class="px-6 py-3 bg-gray-50 text-right">
-            <a routerLink="/provider/my-reservations" class="text-sm font-medium text-primary-600 hover:text-primary-500">
-              Ver historial completo
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Acciones Rápidas -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">Acciones Rápidas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Agendar Visita -->
-          <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0 rounded-md bg-green-100 p-3">
-                  <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div class="ml-5">
-                  <h3 class="text-lg font-medium text-gray-900">Agendar Visita</h3>
-                  <p class="text-sm text-gray-500">Programar una nueva visita</p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 p-4">
-              <a routerLink="/provider/schedule" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
-                <span>Crear Nueva Reserva</span>
-                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Mis Reservas -->
-          <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
-                  <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <div class="ml-5">
-                  <h3 class="text-lg font-medium text-gray-900">Mis Reservas</h3>
-                  <p class="text-sm text-gray-500">Ver y gestionar mis reservas</p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 p-4">
-              <a routerLink="/provider/my-reservations" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
-                <span>Ver Mis Reservas</span>
-                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- Mi Perfil -->
-          <!-- <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0 rounded-md bg-purple-100 p-3">
-                  <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <div class="ml-5">
-                  <h3 class="text-lg font-medium text-gray-900">Mi Perfil</h3>
-                  <p class="text-sm text-gray-500">Gestionar mi información</p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 p-4">
-              <a routerLink="/provider/profile" class="text-primary-600 hover:text-primary-700 font-medium flex items-center">
-                <span>Ver Mi Perfil</span>
-                <svg class="ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div> -->
         </div>
       </div>
     </div>
   </div>
+</div>

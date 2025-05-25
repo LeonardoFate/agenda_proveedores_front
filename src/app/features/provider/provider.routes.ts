@@ -1,3 +1,4 @@
+// src/app/features/provider/provider.routes.ts - ACTUALIZADO
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 
@@ -7,18 +8,26 @@ export const PROVIDER_ROUTES: Routes = [
     redirectTo: 'dashboard',
     pathMatch: 'full'
   },
-//   {
-//     path: 'dashboard',
-//     loadComponent: () => import('./provider-dashboard.component').then(m => m.ProviderDashboardComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
-//    {
-//     path: 'schedule',
-//     loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./provider-dashboard.component').then(m => m.ProviderDashboardComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
+  // ✅ NUEVA RUTA: Selección de plantillas de horario
+  {
+    path: 'schedule',
+    loadComponent: () => import('./schedule/schedule-template-selection.component').then(m => m.ScheduleTemplateSelectionComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
+  // ✅ NUEVA RUTA: Confirmación de reserva con plantilla
+  {
+    path: 'confirm-reservation',
+    loadComponent: () => import('./schedule/confirm-reservation.component').then(m => m.ConfirmReservationComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
 //   {
 //     path: 'my-reservations',
 //     loadComponent: () => import('./reservations/my-reservations.component').then(m => m.MyReservationsComponent),
@@ -31,16 +40,11 @@ export const PROVIDER_ROUTES: Routes = [
 //     canActivate: [authGuard],
 //     data: { requiredRole: 'PROVEEDOR' }
 //   },
-//   {
-//     path: 'edit-reservation/:id',
-//     loadComponent: () => import('./schedule/schedule-reservation.component').then(m => m.ScheduleReservationComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR', isEditing: true }
-//   },
-//   {
-//     path: 'profile',
-//     loadComponent: () => import('./profile/provider-profile.component').then(m => m.ProviderProfileComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   }
+  // ✅ NUEVA RUTA: Estadísticas del proveedor
+  {
+    path: 'statistics',
+    loadComponent: () => import('./statistics/provider-statistics.component').then(m => m.ProviderStatisticsComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  }
 ];

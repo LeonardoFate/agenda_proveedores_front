@@ -1,211 +1,281 @@
-// import { Component, OnInit, OnDestroy } from '@angular/core';
-// import { CommonModule, DatePipe } from '@angular/common';
-// import { RouterModule } from '@angular/router';
-// import { AuthService } from '../../core/services/auth.service';
-// import { ProviderService } from '../../core/services/provider.service';
-// import { User } from '../../core/models/user.model';
-// import { Reserva } from '../../core/models/reserva.model';
-// import { Proveedor } from '../../core/models/proveedor.model';
-// import { Subscription } from 'rxjs';
-// import { catchError, finalize } from 'rxjs/operators';
+// src/app/features/provider/provider-dashboard.component.ts - ACTUALIZADO
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { ProviderService } from '../../core/services/provider.service';
+import { User } from '../../core/models/user.model';
+import { Reserva } from '../../core/models/reserva.model';
+import { HorarioProveedor } from '../../core/models/horario-proveedor.model';
+import { Proveedor } from '../../core/models/proveedor.model';
+import { Subscription } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
-// @Component({
-//   selector: 'app-provider-dashboard',
-//   standalone: true,
-//   imports: [CommonModule, RouterModule, DatePipe],
-//   templateUrl: './provider-dashboard.component.html',
-// })
-// export class ProviderDashboardComponent implements OnInit, OnDestroy {
-//   currentUser: User | null = null;
-//   providerInfo: Proveedor | null = null;
-//   loading = true;
-//   reservations: Reserva[] = [];
-//   currentDate = new Date();
-//   errorMessage: string = '';
+@Component({
+  selector: 'app-provider-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule, DatePipe],
+  templateUrl: './provider-dashboard.component.html',
+})
+export class ProviderDashboardComponent implements OnInit, OnDestroy {
+  currentUser: User | null = null;
+  providerInfo: Proveedor | null = null;
+  loading = true;
+  reservations: Reserva[] = [];
+  weekSchedules: HorarioProveedor[] = [];
+  currentDate = new Date();
+  errorMessage: string = '';
 
-//   private subscriptions: Subscription[] = [];
+  private subscriptions: Subscription[] = [];
 
-//   stats = {
-//     pendingReservations: 0,
-//     completedReservations: 0,
-//     inProgressReservations: 0,
-//     canceledReservations: 0,
-//     totalReservations: 0,
-//     upcomingReservations: 0
-//   };
+  stats = {
+    pendingConfirmation: 0, // ✅ NUEVO: Pendientes de confirmación
+    confirmedReservations: 0, // ✅ NUEVO: Confirmadas
+    completedReservations: 0,
+    inProgressReservations: 0,
+    canceledReservations: 0,
+    totalReservations: 0,
+    upcomingReservations: 0
+  };
 
-//   constructor(
-//     private authService: AuthService,
-//     private providerService: ProviderService
-//   ) {}
+  constructor(
+    private authService: AuthService,
+    private providerService: ProviderService
+  ) {}
 
-//   ngOnInit(): void {
-//     this.loading = true;
-//     const userSub = this.authService.currentUser$.subscribe(user => {
-//       this.currentUser = user;
-//       if (user) {
-//         // Solo cargamos la información del proveedor primero
-//         // Las reservas se cargarán después de obtener la info del proveedor
-//         this.loadProviderInfo();
-//       } else {
-//         this.loading = false;
-//       }
-//     });
+  ngOnInit(): void {
+    this.loading = true;
+    const userSub = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (user) {
+        this.loadProviderInfo();
+      } else {
+        this.loading = false;
+      }
+    });
 
-//     this.subscriptions.push(userSub);
-//   }
+    this.subscriptions.push(userSub);
+  }
 
-//   ngOnDestroy(): void {
-//     // Limpieza de suscripciones para evitar memory leaks
-//     this.subscriptions.forEach(sub => sub.unsubscribe());
-//   }
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
 
-//   loadProviderInfo(): void {
-//     if (!this.currentUser) return;
+  loadProviderInfo(): void {
+    if (!this.currentUser) return;
 
-//     const usuarioId = this.currentUser.id;
-//     console.log('Cargando información del proveedor para el usuario ID:', usuarioId);
+    const usuarioId = this.currentUser.id;
+    console.log('Cargando información del proveedor para el usuario ID:', usuarioId);
 
-//     // Utilizamos el método que obtiene el proveedor por ID de usuario
-//     const providerSub = this.providerService.getProviderByUsuarioId(usuarioId)
-//       .pipe(
-//         catchError(error => {
-//           console.error('Error al cargar la información del proveedor:', error);
-//           this.errorMessage = 'No se pudo cargar la información del proveedor.';
-//           throw error;
-//         })
-//       )
-//       .subscribe({
-//         next: (data) => {
-//           this.providerInfo = data;
-//           console.log('Información del proveedor cargada:', this.providerInfo);
-//           // Ahora que tenemos la información del proveedor, cargamos las reservas
-//           this.loadReservations();
-//         },
-//         error: () => {
-//           // El error ya fue manejado en el operador catchError
-//           this.loading = false;
-//         }
-//       });
+    const providerSub = this.providerService.getProviderByUsuarioId(usuarioId)
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar la información del proveedor:', error);
+          this.errorMessage = 'No se pudo cargar la información del proveedor.';
+          throw error;
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.providerInfo = data;
+          console.log('Información del proveedor cargada:', this.providerInfo);
 
-//     this.subscriptions.push(providerSub);
-//   }
+          // Cargar datos del dashboard
+          this.loadDashboardData();
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
 
-//   loadReservations(): void {
-//     if (!this.providerInfo) {
-//       console.error('No se puede cargar reservas: providerInfo es null');
-//       this.loading = false;
-//       return;
-//     }
+    this.subscriptions.push(providerSub);
+  }
 
-//     // Usar el ID del proveedor, no el ID del usuario
-//     const proveedorId = this.providerInfo.id;
-//     console.log('Cargando reservas para el proveedor ID:', proveedorId);
+  loadDashboardData(): void {
+    if (!this.providerInfo) {
+      this.loading = false;
+      return;
+    }
 
-//     const reservationSub = this.providerService.getMyReservations(proveedorId)
-//       .pipe(
-//         catchError(error => {
-//           console.error('Error al cargar las reservas:', error);
-//           this.errorMessage = 'No se pudieron cargar las reservas.';
-//           throw error;
-//         }),
-//         finalize(() => {
-//           this.loading = false;
-//         })
-//       )
-//       .subscribe({
-//         next: (reservations) => {
-//           this.reservations = reservations;
-//           this.calculateStats();
-//         }
-//       });
+    // Cargar reservas y horarios de la semana en paralelo
+    this.loadReservations();
+    this.loadWeekSchedules();
+  }
 
-//     this.subscriptions.push(reservationSub);
-//   }
+  loadReservations(): void {
+    // Usar el nuevo método con filtros opcionales para obtener reservas recientes
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysForward = new Date();
+    thirtyDaysForward.setDate(thirtyDaysForward.getDate() + 30);
 
-//   calculateStats(): void {
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
+    const reservationSub = this.providerService.getMyReservationsFiltered(
+      thirtyDaysAgo.toISOString().split('T')[0],
+      thirtyDaysForward.toISOString().split('T')[0]
+    )
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar las reservas:', error);
+          this.errorMessage = 'No se pudieron cargar las reservas.';
+          return [];
+        })
+      )
+      .subscribe({
+        next: (reservations) => {
+          this.reservations = reservations;
+          this.calculateStats();
+          this.checkLoadingComplete();
+        }
+      });
 
-//     this.stats.totalReservations = this.reservations.length;
-//     this.stats.pendingReservations = this.reservations.filter(r => r.estado === 'PENDIENTE').length;
-//     this.stats.completedReservations = this.reservations.filter(r => r.estado === 'COMPLETADA').length;
-//     this.stats.inProgressReservations = this.reservations.filter(r =>
-//       r.estado === 'EN_PLANTA' || r.estado === 'EN_RECEPCION'
-//     ).length;
-//     this.stats.canceledReservations = this.reservations.filter(r => r.estado === 'CANCELADA').length;
+    this.subscriptions.push(reservationSub);
+  }
 
-//     // Calcular próximas reservas (futuras y en estado PENDIENTE)
-//     this.stats.upcomingReservations = this.reservations.filter(r => {
-//       const reservaDate = new Date(r.fecha);
-//       return reservaDate >= today && r.estado === 'PENDIENTE';
-//     }).length;
-//   }
+  loadWeekSchedules(): void {
+    // Obtener horarios de la semana actual
+    const startOfWeek = this.getStartOfWeek(new Date());
+    const weekScheduleSub = this.providerService.getMyWeekSchedule(
+      startOfWeek.toISOString().split('T')[0]
+    )
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar horarios de la semana:', error);
+          // No es crítico si no hay horarios asignados
+          return [];
+        })
+      )
+      .subscribe({
+        next: (schedules) => {
+          this.weekSchedules = schedules;
+          console.log('Horarios de la semana cargados:', schedules.length);
+          this.checkLoadingComplete();
+        }
+      });
 
-//   getUpcomingReservations(): Reserva[] {
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
+    this.subscriptions.push(weekScheduleSub);
+  }
 
-//     return this.reservations
-//       .filter(r => {
-//         const reservaDate = new Date(r.fecha);
-//         return reservaDate >= today && r.estado === 'PENDIENTE';
-//       })
-//       .sort((a, b) => {
-//         const dateA = new Date(a.fecha).getTime();
-//         const dateB = new Date(b.fecha).getTime();
+  checkLoadingComplete(): void {
+    // Simple check - podrías hacer esto más sofisticado con forkJoin
+    if (this.reservations !== undefined && this.weekSchedules !== undefined) {
+      this.loading = false;
+    }
+  }
 
-//         if (dateA !== dateB) return dateA - dateB;
+  calculateStats(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-//         return a.horaInicio.localeCompare(b.horaInicio);
-//       })
-//       .slice(0, 3);
-//   }
+    this.stats.totalReservations = this.reservations.length;
 
-//   getRecentReservations(): Reserva[] {
-//     return this.reservations
-//       .filter(r => r.estado === 'COMPLETADA' || r.estado === 'CANCELADA')
-//       .sort((a, b) => {
-//         // Ordenamos por fecha en orden descendente
-//         const dateA = new Date(a.fecha).getTime();
-//         const dateB = new Date(b.fecha).getTime();
-//         return dateB - dateA;
-//       })
-//       .slice(0, 3);
-//   }
+    // ✅ NUEVAS ESTADÍSTICAS
+    this.stats.pendingConfirmation = this.reservations.filter(r => r.estado === 'PENDIENTE_CONFIRMACION').length;
+    this.stats.confirmedReservations = this.reservations.filter(r => r.estado === 'CONFIRMADA').length;
 
-//   // Método para formatear fechas
-//   formatDate(dateString: string): string {
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('es-ES');
-//   }
+    // Estadísticas existentes actualizadas
+    this.stats.completedReservations = this.reservations.filter(r => r.estado === 'COMPLETADA').length;
+    this.stats.inProgressReservations = this.reservations.filter(r =>
+      r.estado === 'EN_PLANTA' || r.estado === 'EN_RECEPCION'
+    ).length;
+    this.stats.canceledReservations = this.reservations.filter(r => r.estado === 'CANCELADA').length;
 
-//   // Método para formatear horas (de HH:MM:SS a HH:MM)
-//   formatTime(timeString: string): string {
-//     return timeString.substring(0, 5);
-//   }
+    // Calcular próximas reservas (futuras y confirmadas o pendientes)
+    this.stats.upcomingReservations = this.reservations.filter(r => {
+      const reservaDate = new Date(r.fecha);
+      return reservaDate >= today && (r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE_CONFIRMACION');
+    }).length;
+  }
 
-//   // Método para obtener una clase de color basada en el estado de la reserva
-//   getStatusClass(status: string): string {
-//     switch (status) {
-//       case 'PENDIENTE': return 'bg-yellow-100 text-yellow-800';
-//       case 'EN_PLANTA': return 'bg-blue-100 text-blue-800';
-//       case 'EN_RECEPCION': return 'bg-purple-100 text-purple-800';
-//       case 'COMPLETADA': return 'bg-green-100 text-green-800';
-//       case 'CANCELADA': return 'bg-red-100 text-red-800';
-//       default: return 'bg-gray-100 text-gray-800';
-//     }
-//   }
+  getUpcomingReservations(): Reserva[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-//   // Método para traducir los estados
-//   getStatusName(status: string): string {
-//     switch (status) {
-//       case 'PENDIENTE': return 'Pendiente';
-//       case 'EN_PLANTA': return 'En Planta';
-//       case 'EN_RECEPCION': return 'En Recepción';
-//       case 'COMPLETADA': return 'Completada';
-//       case 'CANCELADA': return 'Cancelada';
-//       default: return status;
-//     }
-//   }
-// }
+    return this.reservations
+      .filter(r => {
+        const reservaDate = new Date(r.fecha);
+        return reservaDate >= today && (r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE_CONFIRMACION');
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.fecha).getTime();
+        const dateB = new Date(b.fecha).getTime();
+
+        if (dateA !== dateB) return dateA - dateB;
+
+        // Si hay hora de inicio, usar para ordenar
+        if (a.horaInicio && b.horaInicio) {
+          return a.horaInicio.localeCompare(b.horaInicio);
+        }
+        return 0;
+      })
+      .slice(0, 3);
+  }
+
+  getRecentReservations(): Reserva[] {
+    return this.reservations
+      .filter(r => r.estado === 'COMPLETADA' || r.estado === 'CANCELADA')
+      .sort((a, b) => {
+        const dateA = new Date(a.fecha).getTime();
+        const dateB = new Date(b.fecha).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 3);
+  }
+
+  // ✅ NUEVOS MÉTODOS PARA MANEJAR HORARIOS ASIGNADOS
+  getPendingConfirmationSchedules(): HorarioProveedor[] {
+    return this.weekSchedules.filter(s =>
+      s.tieneReserva && s.estadoReserva === 'PENDIENTE_CONFIRMACION'
+    ).slice(0, 3);
+  }
+
+  hasSchedulesToConfirm(): boolean {
+    return this.weekSchedules.some(s => s.puedeConfirmar);
+  }
+
+  // Método auxiliar para obtener el inicio de la semana
+  getStartOfWeek(date: Date): Date {
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Lunes como inicio
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+  }
+
+  // Métodos de formateo existentes
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES');
+  }
+
+  formatTime(timeString: string | null | undefined): string {
+    if (!timeString) return '-';
+    return timeString.substring(0, 5);
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'PENDIENTE_CONFIRMACION': return 'bg-orange-100 text-orange-800';
+      case 'CONFIRMADA': return 'bg-blue-100 text-blue-800';
+      case 'PENDIENTE': return 'bg-yellow-100 text-yellow-800';
+      case 'EN_PLANTA': return 'bg-indigo-100 text-indigo-800';
+      case 'EN_RECEPCION': return 'bg-purple-100 text-purple-800';
+      case 'COMPLETADA': return 'bg-green-100 text-green-800';
+      case 'CANCELADA': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  getStatusName(status: string): string {
+    switch (status) {
+      case 'PENDIENTE_CONFIRMACION': return 'Pendiente Confirmación';
+      case 'CONFIRMADA': return 'Confirmada';
+      case 'PENDIENTE': return 'Pendiente';
+      case 'EN_PLANTA': return 'En Planta';
+      case 'EN_RECEPCION': return 'En Recepción';
+      case 'COMPLETADA': return 'Completada';
+      case 'CANCELADA': return 'Cancelada';
+      default: return status;
+    }
+  }
+}
