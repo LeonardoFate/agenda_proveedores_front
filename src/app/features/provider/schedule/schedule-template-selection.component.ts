@@ -1,4 +1,4 @@
-// src/app/features/provider/schedule/schedule-template-selection.component.ts
+// src/app/features/provider/schedule/schedule-template-selection.component.ts - CORREGIDO
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -14,7 +14,264 @@ import { catchError, finalize } from 'rxjs/operators';
   selector: 'app-schedule-template-selection',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './schedule-template-selection.component.html'
+  template: `
+    <div class="bg-gray-50 min-h-screen p-6">
+      <div class="max-w-6xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">Confirmar Horarios Asignados</h1>
+              <p class="text-gray-600">Complete los datos del vehículo y conductor para sus horarios programados</p>
+            </div>
+            <div>
+              <a routerLink="/provider/dashboard" class="text-primary-600 hover:text-primary-700 flex items-center">
+                <svg class="w-5 h-5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Volver al dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-red-700">{{ errorMessage }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loader -->
+        <div *ngIf="loading" class="flex justify-center my-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+        </div>
+
+        <!-- Selector de Fecha -->
+        <div *ngIf="!loading" class="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Seleccionar Fecha</h2>
+          <div class="flex items-center space-x-4">
+            <div class="max-w-md">
+              <label for="fecha" class="block text-sm font-medium text-gray-700 mb-2">Fecha para confirmar horarios</label>
+              <input
+                type="date"
+                id="fecha"
+                [(ngModel)]="selectedDate"
+                [min]="minDate"
+                [max]="maxDate"
+                (change)="onDateChange()"
+                class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+              >
+            </div>
+            <!-- Debug info - REMOVER EN PRODUCCIÓN -->
+            <div *ngIf="selectedDate && availableSchedules.length > 0" class="mt-6">
+              <div class="text-xs text-gray-500">
+                <p>Total horarios: {{ availableSchedules.length }}</p>
+                <p>Pueden confirmar: {{ getConfirmableCount() }}</p>
+                <p>Ya confirmados: {{ getConfirmedCount() }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Horarios -->
+        <div *ngIf="!loading && selectedDate" class="space-y-4">
+
+          <!-- Sin horarios para la fecha -->
+          <div *ngIf="availableSchedules.length === 0" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                  No tiene horarios asignados para la fecha {{ formatDate(selectedDate) }}.
+                  Por favor, seleccione otra fecha o contacte al administrador.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de horarios asignados -->
+          <div *ngFor="let schedule of availableSchedules" class="bg-white shadow-md rounded-lg overflow-hidden border-l-4"
+               [ngClass]="{
+                 'border-orange-500': canConfirmSchedule(schedule),
+                 'border-blue-500': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
+                 'border-green-500': !schedule.tieneReserva,
+                 'border-gray-300': !canConfirmSchedule(schedule) && schedule.tieneReserva
+               }">
+            <div class="p-6">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <!-- Información principal del horario -->
+                  <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 mr-4">
+                      <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                           [ngClass]="{
+                             'bg-orange-100': canConfirmSchedule(schedule),
+                             'bg-blue-100': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
+                             'bg-green-100': !schedule.tieneReserva,
+                             'bg-gray-100': !canConfirmSchedule(schedule) && schedule.tieneReserva
+                           }">
+                        <svg class="w-6 h-6"
+                             [ngClass]="{
+                               'text-orange-600': canConfirmSchedule(schedule),
+                               'text-blue-600': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
+                               'text-green-600': !schedule.tieneReserva,
+                               'text-gray-600': !canConfirmSchedule(schedule) && schedule.tieneReserva
+                             }"
+                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 class="text-lg font-semibold text-gray-900">{{ schedule.dia }}</h3>
+                      <p class="text-sm text-gray-600">{{ formatDate(schedule.fecha) }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Detalles del horario (solo lectura) -->
+                  <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Horario Asignado (No modificable)</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Horario</p>
+                        <p class="text-sm text-gray-900 font-medium">{{ schedule.horaInicio }} - {{ schedule.horaFin }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Tiempo de Descarga</p>
+                        <p class="text-sm text-gray-900">{{ schedule.tiempoDescarga }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Área - Andén</p>
+                        <p class="text-sm text-gray-900">{{ schedule.areaNombre }} - Andén {{ schedule.andenNumero }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Tipo de Servicio</p>
+                        <p class="text-sm text-gray-900">{{ schedule.tipoServicioNombre }}</p>
+                      </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Número de Personas</p>
+                        <p class="text-sm text-gray-900">{{ schedule.numeroPersonas }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs font-medium text-gray-500">Estado</p>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              [ngClass]="{
+                                'bg-orange-100 text-orange-800': canConfirmSchedule(schedule),
+                                'bg-blue-100 text-blue-800': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
+                                'bg-green-100 text-green-800': !schedule.tieneReserva && !canConfirmSchedule(schedule),
+                                'bg-gray-100 text-gray-800': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
+                              }">
+                          {{ getStatusDisplayText(schedule) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mensaje para horarios que se pueden confirmar -->
+                  <div *ngIf="canConfirmSchedule(schedule)" class="bg-orange-50 border border-orange-200 rounded-md p-3">
+                    <div class="flex">
+                      <div class="flex-shrink-0">
+                        <svg class="h-4 w-4 text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                      </div>
+                      <div class="ml-2">
+                        <p class="text-xs text-orange-700">
+                          <strong>Acción requerida:</strong> Complete los datos del vehículo y conductor para confirmar este horario.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Debug info - REMOVER EN PRODUCCIÓN -->
+                  <div class="mt-2 text-xs text-gray-400 bg-gray-100 p-2 rounded">
+                    <p>Debug: tieneReserva={{ schedule.tieneReserva }}, estadoReserva={{ schedule.estadoReserva }}, puedeConfirmar={{ schedule.puedeConfirmar }}</p>
+                    <p>canConfirmSchedule()={{ canConfirmSchedule(schedule) }}</p>
+                  </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="flex-shrink-0 ml-6">
+                  <div class="flex flex-col space-y-2">
+                    <!-- Botón CONFIRMAR para horarios disponibles -->
+                    <button
+                      *ngIf="canConfirmSchedule(schedule)"
+                      (click)="completeReservationData(schedule)"
+                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                    >
+                      <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Completar Datos
+                    </button>
+
+                    <!-- Botón para ver reserva confirmada -->
+                    <button
+                      *ngIf="schedule.tieneReserva && schedule.reservaId"
+                      (click)="viewReservation(schedule.reservaId!)"
+                      class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Ver Reserva
+                    </button>
+
+                    <!-- Estado no disponible -->
+                    <span
+                      *ngIf="!canConfirmSchedule(schedule) && !schedule.tieneReserva"
+                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md cursor-not-allowed"
+                    >
+                      <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                      </svg>
+                      No Disponible
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div *ngIf="!loading && selectedDate && availableSchedules.length > 0" class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md mt-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800">Información Importante</h3>
+              <div class="mt-1 text-sm text-blue-700">
+                <ul class="list-disc pl-5 space-y-1">
+                  <li>Los horarios mostrados son asignados por el administrador y <strong>no se pueden modificar</strong>.</li>
+                  <li>Solo necesita completar los datos del vehículo, conductor y ayudantes para confirmar la reserva.</li>
+                  <li>Una vez confirmado, podrá ver todos los detalles en "Mis Reservas".</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
 })
 export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
@@ -22,7 +279,6 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
   selectedDate: string = '';
   loading = false;
   errorMessage = '';
-  successMessage = '';
   minDate: string;
   maxDate: string;
 
@@ -33,7 +289,7 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     private providerService: ProviderService,
     private router: Router
   ) {
-    // Configurar fechas mínima y máxima (hoy y 3 meses en adelante)
+    // Configurar fechas
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
 
@@ -41,7 +297,7 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     maxDate.setMonth(maxDate.getMonth() + 3);
     this.maxDate = maxDate.toISOString().split('T')[0];
 
-    // Establecer fecha por defecto (hoy)
+    // Establecer fecha por defecto
     this.selectedDate = this.minDate;
   }
 
@@ -49,7 +305,6 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       if (user) {
-        // Cargar horarios para la fecha por defecto
         this.loadMySchedules();
       }
     });
@@ -78,23 +333,17 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
 
     console.log('Cargando horarios para fecha:', this.selectedDate);
 
-    // Primero intentar obtener horarios individuales para la fecha
     const scheduleSub = this.providerService.getMySchedule(this.selectedDate)
       .pipe(
         catchError(error => {
           console.error('Error al cargar horario individual:', error);
-
-          // Si no hay horario individual, intentar cargar horarios semanales
           return this.providerService.getMyWeekSchedule(this.selectedDate).pipe(
             catchError(weekError => {
               console.error('Error al cargar horarios semanales:', weekError);
-
-              // Si tampoco hay horarios semanales, no es un error crítico
               if (error.status === 404 || weekError.status === 404) {
                 this.availableSchedules = [];
                 return [];
               }
-
               this.errorMessage = 'Error al cargar los horarios asignados.';
               throw weekError;
             })
@@ -109,31 +358,46 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
           console.log('Datos recibidos:', data);
 
           if (Array.isArray(data)) {
-            // Si es un array, filtrar por la fecha seleccionada
             this.availableSchedules = data.filter(schedule => schedule.fecha === this.selectedDate);
           } else if (data && typeof data === 'object') {
-            // Si es un objeto individual, agregarlo al array
             this.availableSchedules = [data];
           } else {
-            // Si no hay datos, array vacío
             this.availableSchedules = [];
           }
 
           console.log('Horarios procesados:', this.availableSchedules);
-        },
-        error: (error) => {
-          // Error ya manejado en catchError
-          console.error('Error final:', error);
         }
       });
 
     this.subscriptions.push(scheduleSub);
   }
 
-  confirmSchedule(schedule: HorarioProveedor): void {
-    console.log('Confirmando horario:', schedule);
+  // ✅ LÓGICA CORREGIDA: Determinar si un horario se puede confirmar
+  canConfirmSchedule(schedule: HorarioProveedor): boolean {
+    // Un horario se puede confirmar si:
+    // 1. No tiene reserva aún (tieneReserva = false)
+    // 2. O tiene reserva pero está pendiente de confirmación y se puede confirmar
+    // 3. O la propiedad puedeConfirmar es true
 
-    // Navegar al formulario de confirmación con los datos de la plantilla
+    if (schedule.puedeConfirmar) {
+      return true;
+    }
+
+    if (!schedule.tieneReserva) {
+      return true; // Horario disponible para crear reserva
+    }
+
+    if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
+      return true; // Tiene reserva pero necesita completar datos
+    }
+
+    return false;
+  }
+
+  // Navegar al formulario para completar datos del vehículo y conductor
+  completeReservationData(schedule: HorarioProveedor): void {
+    console.log('Completando datos para horario:', schedule);
+
     this.router.navigate(['/provider/confirm-reservation'], {
       queryParams: {
         fecha: this.selectedDate,
@@ -153,42 +417,44 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     });
   }
 
-  completeReservation(schedule: HorarioProveedor): void {
-    console.log('Completando reserva pendiente:', schedule);
-
-    // Si ya tiene una reserva pendiente, navegar para completar datos
-    if (schedule.reservaId) {
-      // Cargar datos existentes y navegar al formulario de edición
-      this.router.navigate(['/provider/confirm-reservation'], {
-        queryParams: {
-          fecha: this.selectedDate,
-          reservaId: schedule.reservaId,
-          scheduleData: JSON.stringify({
-            areaId: schedule.areaId,
-            areaNombre: schedule.areaNombre,
-            andenId: schedule.andenId,
-            andenNumero: schedule.andenNumero,
-            tipoServicioId: schedule.tipoServicioId,
-            tipoServicioNombre: schedule.tipoServicioNombre,
-            horaInicio: schedule.horaInicio,
-            horaFin: schedule.horaFin,
-            tiempoDescarga: schedule.tiempoDescarga,
-            numeroPersonas: schedule.numeroPersonas
-          })
-        }
-      });
-    } else {
-      // Si no tiene reservaId, tratar como confirmación nueva
-      this.confirmSchedule(schedule);
-    }
-  }
-
   viewReservation(reservaId: number): void {
     this.router.navigate(['/provider/reservation', reservaId]);
   }
 
-  // Método auxiliar para formatear fechas
+  // Métodos auxiliares para debug
+  getConfirmableCount(): number {
+    return this.availableSchedules.filter(s => this.canConfirmSchedule(s)).length;
+  }
+
+  getConfirmedCount(): number {
+    return this.availableSchedules.filter(s => s.tieneReserva && s.estadoReserva === 'CONFIRMADA').length;
+  }
+
+  getStatusDisplayText(schedule: HorarioProveedor): string {
+    if (this.canConfirmSchedule(schedule)) {
+      if (!schedule.tieneReserva) {
+        return 'Disponible para Confirmar';
+      } else {
+        return 'Pendiente de Completar Datos';
+      }
+    }
+
+    if (schedule.tieneReserva) {
+      switch (schedule.estadoReserva) {
+        case 'CONFIRMADA':
+          return 'Confirmada';
+        case 'PENDIENTE_CONFIRMACION':
+          return 'Pendiente Confirmación';
+        default:
+          return schedule.estadoReserva || 'En Proceso';
+      }
+    }
+
+    return 'No Disponible';
+  }
+
   formatDate(dateString: string): string {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       weekday: 'long',
@@ -196,12 +462,5 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
       month: 'long',
       day: 'numeric'
     });
-  }
-
-  // Método auxiliar para obtener el nombre del día de la semana
-  getDayName(dateString: string): string {
-    const date = new Date(dateString);
-    const days = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
-    return days[date.getDay()];
   }
 }
