@@ -63,7 +63,7 @@ export class ProviderService {
       );
   }
 
-  // Obtener reserva pendiente de confirmación
+//   // Obtener reserva pendiente de confirmación
 //   getPendingReservation(fecha: string): Observable<ReservaDetalle> {
 //     const params = new HttpParams().set('fecha', fecha);
 
@@ -78,22 +78,22 @@ export class ProviderService {
 //   }
 
   // Confirmar reserva (completar datos de transporte)
-//   confirmReservation(reservaData: Reserva): Observable<ReservaDetalle> {
-//     console.log('Confirmando reserva con datos:', reservaData);
+  confirmReservation(reservaData: Reserva): Observable<ReservaDetalle> {
+    console.log('Confirmando reserva con datos:', reservaData);
 
-//     const headers = new HttpHeaders({
-//       'Content-Type': 'application/json'
-//     });
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
 
-//     return this.http.post<ReservaDetalle>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
-//       .pipe(
-//         tap(response => console.log('Reserva confirmada exitosamente:', response)),
-//         catchError(error => {
-//           console.error('Error al confirmar reserva:', error);
-//           return throwError(() => error);
-//         })
-//       );
-//   }
+    return this.http.post<ReservaDetalle>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
+      .pipe(
+        tap(response => console.log('Reserva confirmada exitosamente:', response)),
+        catchError(error => {
+          console.error('Error al confirmar reserva:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
   // Obtener mis reservas con filtros opcionales
   getMyReservationsFiltered(fechaInicio?: string, fechaFin?: string): Observable<Reserva[]> {
@@ -117,25 +117,25 @@ export class ProviderService {
   }
 
   // Obtener mis estadísticas
-//   getMyStatistics(fechaInicio?: string, fechaFin?: string): Observable<ProviderStatistics> {
-//     let params = new HttpParams();
+  getMyStatistics(fechaInicio?: string, fechaFin?: string): Observable<ProviderStatistics> {
+    let params = new HttpParams();
 
-//     if (fechaInicio) {
-//       params = params.set('fechaInicio', fechaInicio);
-//     }
-//     if (fechaFin) {
-//       params = params.set('fechaFin', fechaFin);
-//     }
+    if (fechaInicio) {
+      params = params.set('fechaInicio', fechaInicio);
+    }
+    if (fechaFin) {
+      params = params.set('fechaFin', fechaFin);
+    }
 
-//     return this.http.get<ProviderStatistics>(`${this.reservasUrl}/mis-estadisticas`, { params })
-//       .pipe(
-//         tap(stats => console.log('Estadísticas obtenidas:', stats)),
-//         catchError(error => {
-//           console.error('Error al obtener estadísticas:', error);
-//           return throwError(() => error);
-//         })
-//       );
-//   }
+    return this.http.get<ProviderStatistics>(`${this.reservasUrl}/mis-estadisticas`, { params })
+      .pipe(
+        tap(stats => console.log('Estadísticas obtenidas:', stats)),
+        catchError(error => {
+          console.error('Error al obtener estadísticas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
   // ===== MÉTODOS EXISTENTES MANTENIDOS =====
 
@@ -183,22 +183,22 @@ export class ProviderService {
   }
 
   // Actualizar una reserva existente
-  updateReservation(id: number, reservation: Reserva): Observable<ReservaDetalle> {
-    console.log('Actualizando reserva ID:', id);
-    console.log('Datos para actualizar:', JSON.stringify(reservation));
+//   updateReservation(id: number, reservation: Reserva): Observable<ReservaDetalle> {
+//     console.log('Actualizando reserva ID:', id);
+//     console.log('Datos para actualizar:', JSON.stringify(reservation));
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
+//     const headers = new HttpHeaders({
+//       'Content-Type': 'application/json'
+//     });
 
-    return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error al actualizar reserva:', error);
-          return throwError(() => error);
-        })
-      );
-  }
+//     return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
+//       .pipe(
+//         catchError(error => {
+//           console.error('Error al actualizar reserva:', error);
+//           return throwError(() => error);
+//         })
+//       );
+//   }
 
   // Cancelar una reserva
   cancelReservation(id: number): Observable<void> {
@@ -433,87 +433,22 @@ deletePlantillasMultiple(ids: number[]): Observable<any> {
     })
   );
 }
-// ✅ AÑADIR ESTOS MÉTODOS AL PROVIDER SERVICE EXISTENTE:
-
-/**
- * Confirmar una reserva basada en plantilla de horario
- * Utiliza el modelo ConfirmarReservaRequest
- */
-confirmReservation(reservaData: any): Observable<any> {
-  console.log('Confirmando reserva con datos:', reservaData);
+updateReservation(id: number, reservation: any): Observable<ReservaDetalle> {
+  console.log('Actualizando reserva ID:', id);
+  console.log('Datos para actualizar:', JSON.stringify(reservation));
 
   const headers = new HttpHeaders({
     'Content-Type': 'application/json'
   });
 
-  return this.http.post<any>(`${this.reservasUrl}/confirmar-plantilla`, reservaData, { headers })
+  return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
     .pipe(
-      tap(response => console.log('Reserva confirmada exitosamente desde plantilla:', response)),
       catchError(error => {
-        console.error('Error al confirmar reserva desde plantilla:', error);
+        console.error('Error al actualizar reserva:', error);
         return throwError(() => error);
       })
     );
 }
-
-/**
- * Obtener la reserva pendiente de confirmación para una fecha específica
- */
-getPendingReservation(fecha: string): Observable<ReservaDetalle> {
-  const params = new HttpParams().set('fecha', fecha);
-
-  return this.http.get<ReservaDetalle>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
-    .pipe(
-      tap(reserva => console.log('Reserva pendiente obtenida:', reserva)),
-      catchError(error => {
-        console.error('Error al obtener reserva pendiente:', error);
-        return throwError(() => error);
-      })
-    );
-}
-
-/**
- * Verificar si el proveedor tiene horarios asignados para una fecha
- */
-checkScheduleAvailability(fecha: string): Observable<boolean> {
-  const params = new HttpParams().set('fecha', fecha);
-
-  return this.http.get<boolean>(`${this.reservasUrl}/verificar-horario-asignado`, { params })
-    .pipe(
-      tap(disponible => console.log('Horario disponible para fecha', fecha, ':', disponible)),
-      catchError(error => {
-        console.error('Error al verificar disponibilidad de horario:', error);
-        return throwError(() => error);
-      })
-    );
-}
-
-/**
- * Obtener estadísticas del proveedor para un rango de fechas
- */
-getMyStatistics(fechaInicio?: string, fechaFin?: string): Observable<ProviderStatistics> {
-  let params = new HttpParams();
-
-  if (fechaInicio) {
-    params = params.set('fechaInicio', fechaInicio);
-  }
-  if (fechaFin) {
-    params = params.set('fechaFin', fechaFin);
-  }
-
-  return this.http.get<ProviderStatistics>(`${this.reservasUrl}/mis-estadisticas`, { params })
-    .pipe(
-      tap(stats => console.log('Estadísticas obtenidas:', stats)),
-      catchError(error => {
-        console.error('Error al obtener estadísticas:', error);
-        return throwError(() => error);
-      })
-    );
-}
-
-/**
- * Actualizar una reserva existente (solo si está en estado PENDIENTE_CONFIRMACION)
- */
 updatePendingReservation(reservaId: number, updateData: any): Observable<ReservaDetalle> {
   console.log('Actualizando reserva pendiente ID:', reservaId);
   console.log('Datos para actualizar:', JSON.stringify(updateData));
@@ -527,6 +462,19 @@ updatePendingReservation(reservaId: number, updateData: any): Observable<Reserva
       tap(response => console.log('Reserva pendiente actualizada:', response)),
       catchError(error => {
         console.error('Error al actualizar reserva pendiente:', error);
+        return throwError(() => error);
+      })
+    );
+}
+
+getPendingReservation(fecha: string): Observable<ReservaDetalle> {
+  const params = new HttpParams().set('fecha', fecha);
+
+  return this.http.get<ReservaDetalle>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
+    .pipe(
+      tap(reserva => console.log('Reserva pendiente obtenida:', reserva)),
+      catchError(error => {
+        console.error('Error al obtener reserva pendiente:', error);
         return throwError(() => error);
       })
     );

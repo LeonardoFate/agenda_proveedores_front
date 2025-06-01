@@ -1,4 +1,5 @@
-// src/app/core/models/confirmar-reserva.model.ts - MODELO COMPLETO
+// src/app/core/models/confirmar-reserva.model.ts - MODELO ACTUALIZADO
+
 import { Ayudante } from './reserva.model';
 
 export interface ConfirmarReservaRequest {
@@ -31,4 +32,35 @@ export interface ConfirmarReservaResponse {
     andenNumero: number;
     tipoServicioNombre: string;
   };
+}
+
+// ✅ MODELO ACTUALIZADO - Con proveedorId requerido
+export interface ReservaDTO {
+  // ✅ NUEVO CAMPO REQUERIDO
+  proveedorId: number;
+
+  // Datos de la plantilla (no modificables)
+  fecha: string;
+  horaInicio: string;
+  horaFin: string;
+  areaId: number;
+  andenId: number;
+  tipoServicioId: number;
+
+  // Datos del vehículo
+  transporteTipo: string;
+  transporteMarca: string;
+  transporteModelo: string;
+  transportePlaca: string;
+  transporteCapacidad?: string;
+
+  // Datos del conductor
+  conductorNombres: string;
+  conductorApellidos: string;
+  conductorCedula: string;
+
+  // Datos opcionales
+  descripcion?: string;
+  numeroPalets?: number;
+  ayudantes?: Ayudante[];
 }
