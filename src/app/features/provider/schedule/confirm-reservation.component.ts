@@ -208,101 +208,80 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
   }
 
   // ✅ MÉTODO PRINCIPAL PARA ENVIAR FORMULARIO
-  onSubmit(): void {
-    console.log('🚀 Iniciando creación de reserva completa...');
-    console.log('📋 Formulario válido:', this.confirmForm.valid);
-    console.log('📊 Datos de plantilla:', this.scheduleData);
-    console.log('📝 Datos del formulario:', this.confirmForm.value);
+onSubmit(): void {
+  console.log('🚀 Iniciando confirmación de PRE-RESERVA...');
 
-    if (this.confirmForm.valid && this.scheduleData) {
-      this.submitting = true;
-      this.errorMessage = '';
-      this.successMessage = '';
+  if (this.confirmForm.valid && this.scheduleData) {
+    this.submitting = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-      // Crear reserva completa
-      this.createNewReservationFromTemplate();
-    } else {
-      console.log('❌ Formulario inválido o faltan datos de plantilla');
-      this.markFormGroupTouched(this.confirmForm);
-    }
+    // ✅ CONFIRMAR PRE-RESERVA EN LUGAR DE CREAR NUEVA
+    this.confirmExistingPreReservation();
+  } else {
+    console.log('❌ Formulario inválido o faltan datos de plantilla');
+    this.markFormGroupTouched(this.confirmForm);
   }
+}
 
   // ✅ MÉTODO PARA CREAR RESERVA COMPLETA
-  private createNewReservationFromTemplate(): void {
-    console.log('📝 Creando nueva reserva completa...');
+ private confirmExistingPreReservation(): void {
+  console.log('📝 Confirmando PRE-RESERVA existente...');
 
-    if (!this.currentUser) {
-      this.errorMessage = 'Error: Usuario no encontrado.';
-      this.submitting = false;
-      return;
-    }
-
-    // Obtener información del proveedor
-    this.providerService.getProviderByUsuarioId(this.currentUser.id)
-      .subscribe({
-        next: (providerInfo) => {
-          console.log('✅ Información del proveedor obtenida:', providerInfo);
-
-          // ✅ CONSTRUIR DATOS DE RESERVA COMPLETA
-          const reservaDTO = {
-            // Datos del proveedor
-            proveedorId: providerInfo.id,
-
-            // Datos de la plantilla (readonly - horarios básicos)
-            fecha: this.selectedDate,
-            horaInicio: this.scheduleData!.horaInicio,
-            horaFin: this.scheduleData!.horaFin,
-
-            // ✅ RECURSOS: Seleccionados por el proveedor
-            areaId: parseInt(this.confirmForm.get('areaId')?.value),
-            andenId: parseInt(this.confirmForm.get('andenId')?.value),
-            tipoServicioId: parseInt(this.confirmForm.get('tipoServicioId')?.value),
-
-            // Datos del transporte
-            transporteTipo: this.confirmForm.get('transporteTipo')?.value,
-            transporteMarca: this.confirmForm.get('transporteMarca')?.value,
-            transporteModelo: this.confirmForm.get('transporteModelo')?.value,
-            transportePlaca: this.confirmForm.get('transportePlaca')?.value?.toUpperCase(),
-            transporteCapacidad: this.confirmForm.get('transporteCapacidad')?.value || null,
-
-            // Datos del conductor
-            conductorNombres: this.confirmForm.get('conductorNombres')?.value,
-            conductorApellidos: this.confirmForm.get('conductorApellidos')?.value,
-            conductorCedula: this.confirmForm.get('conductorCedula')?.value,
-
-            // Datos adicionales
-            numeroPalets: this.confirmForm.get('numeroPalets')?.value || null,
-            descripcion: this.confirmForm.get('observaciones')?.value || 'Reserva confirmada por proveedor desde plantilla de horario',
-            ayudantes: this.ayudantesArray.value.length > 0 ? this.ayudantesArray.value : []
-          };
-
-          console.log('📤 Enviando datos completos de reserva:', reservaDTO);
-
-          // ✅ CREAR NUEVA RESERVA DIRECTAMENTE
-          this.providerService.createReservation(reservaDTO)
-            .pipe(
-              finalize(() => {
-                this.submitting = false;
-              })
-            )
-            .subscribe({
-              next: (response) => {
-                console.log('✅ Reserva creada exitosamente:', response);
-                this.handleSuccess(response);
-              },
-              error: (error) => {
-                console.error('❌ Error al crear reserva:', error);
-                this.handleError(error);
-              }
-            });
-        },
-        error: (error) => {
-          console.error('❌ Error al obtener información del proveedor:', error);
-          this.errorMessage = 'Error al obtener información del proveedor.';
-          this.submitting = false;
-        }
-      });
+  if (!this.currentUser) {
+    this.errorMessage = 'Error: Usuario no encontrado.';
+    this.submitting = false;
+    return;
   }
+
+  // ✅ CONSTRUIR DATOS PARA CONFIRMAR PRE-RESERVA
+  const confirmData = {
+    // ✅ RECURSOS: Seleccionados por el proveedor
+    areaId: parseInt(this.confirmForm.get('areaId')?.value),
+    andenId: parseInt(this.confirmForm.get('andenId')?.value),
+    tipoServicioId: parseInt(this.confirmForm.get('tipoServicioId')?.value),
+
+    // Datos de la plantilla (readonly)
+    fecha: this.selectedDate,
+
+    // Datos del transporte
+    transporteTipo: this.confirmForm.get('transporteTipo')?.value,
+    transporteMarca: this.confirmForm.get('transporteMarca')?.value,
+    transporteModelo: this.confirmForm.get('transporteModelo')?.value,
+    transportePlaca: this.confirmForm.get('transportePlaca')?.value?.toUpperCase(),
+    transporteCapacidad: this.confirmForm.get('transporteCapacidad')?.value || null,
+
+    // Datos del conductor
+    conductorNombres: this.confirmForm.get('conductorNombres')?.value,
+    conductorApellidos: this.confirmForm.get('conductorApellidos')?.value,
+    conductorCedula: this.confirmForm.get('conductorCedula')?.value,
+
+    // Datos adicionales
+    numeroPalets: this.confirmForm.get('numeroPalets')?.value || null,
+    descripcion: this.confirmForm.get('observaciones')?.value || 'Reserva confirmada por proveedor',
+    ayudantes: this.ayudantesArray.value.length > 0 ? this.ayudantesArray.value : []
+  };
+
+  console.log('📤 Enviando confirmación de PRE-RESERVA:', confirmData);
+
+  // ✅ CONFIRMAR PRE-RESERVA EXISTENTE
+  this.providerService.confirmReservation(confirmData)
+    .pipe(
+      finalize(() => {
+        this.submitting = false;
+      })
+    )
+    .subscribe({
+      next: (response) => {
+        console.log('✅ PRE-RESERVA confirmada exitosamente:', response);
+        this.handleSuccess(response);
+      },
+      error: (error) => {
+        console.error('❌ Error al confirmar PRE-RESERVA:', error);
+        this.handleError(error);
+      }
+    });
+}
 
   // ✅ MANEJO DE ÉXITO
   private handleSuccess(response: any): void {
