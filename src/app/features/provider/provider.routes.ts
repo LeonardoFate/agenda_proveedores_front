@@ -1,4 +1,4 @@
-// src/app/features/provider/provider.routes.ts - ACTUALIZADO
+// src/app/features/provider/provider.routes.ts - COMPLETO ACTUALIZADO
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 
@@ -30,7 +30,7 @@ export const PROVIDER_ROUTES: Routes = [
     data: { requiredRole: 'PROVEEDOR' }
   },
 //   {
-//     path: 'reservations',
+//     path: 'my-reservations',
 //     loadComponent: () =>
 //       import('./reservations/my-reservations.component').then(m => m.MyReservationsComponent),
 //     canActivate: [authGuard],

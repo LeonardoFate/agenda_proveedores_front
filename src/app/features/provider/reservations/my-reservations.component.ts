@@ -1,3 +1,4 @@
+// // src/app/features/provider/reservations/my-reservations.component.ts - COMPLETO ACTUALIZADO
 // import { Component, OnInit } from '@angular/core';
 // import { CommonModule } from '@angular/common';
 // import { RouterModule } from '@angular/router';
@@ -70,10 +71,18 @@
 //       return;
 //     }
 
-//     const proveedorId = this.providerInfo.id;
-//     console.log('Cargando reservas para proveedor ID:', proveedorId);
+//     // ✅ USAR EL NUEVO MÉTODO CON FILTROS
+//     console.log('Cargando reservas para proveedor:', this.providerInfo.nombre);
 
-//     this.providerService.getMyReservations(proveedorId).subscribe({
+//     // Obtener reservas de los últimos 6 meses
+//     const sixMonthsAgo = new Date();
+//     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+//     const today = new Date();
+
+//     this.providerService.getMyReservationsFiltered(
+//       sixMonthsAgo.toISOString().split('T')[0],
+//       today.toISOString().split('T')[0]
+//     ).subscribe({
 //       next: (data) => {
 //         this.reservations = data;
 //         console.log('Reservas cargadas:', data.length);
@@ -133,8 +142,8 @@
 
 //     // Ordenar por fecha (más reciente primero)
 //     filtered.sort((a, b) => {
-//       const dateA = new Date(a.fecha + 'T' + a.horaInicio);
-//       const dateB = new Date(b.fecha + 'T' + b.horaInicio);
+//       const dateA = new Date(a.fecha + 'T' + (a.horaInicio || '00:00'));
+//       const dateB = new Date(b.fecha + 'T' + (b.horaInicio || '00:00'));
 //       return dateB.getTime() - dateA.getTime();
 //     });
 
@@ -172,15 +181,18 @@
 //   }
 
 //   // Método para formatear horas
-//   formatTime(timeString: string): string {
+//   formatTime(timeString: string | null | undefined): string {
+//     if (!timeString) return '-';
 //     return timeString.substring(0, 5);
 //   }
 
-//   // Método para obtener una clase de color basada en el estado de la reserva
+//   // ✅ ACTUALIZADO: Incluir nuevos estados
 //   getStatusClass(status: string): string {
 //     switch (status) {
+//       case 'PENDIENTE_CONFIRMACION': return 'bg-orange-100 text-orange-800';
+//       case 'CONFIRMADA': return 'bg-blue-100 text-blue-800';
 //       case 'PENDIENTE': return 'bg-yellow-100 text-yellow-800';
-//       case 'EN_PLANTA': return 'bg-blue-100 text-blue-800';
+//       case 'EN_PLANTA': return 'bg-indigo-100 text-indigo-800';
 //       case 'EN_RECEPCION': return 'bg-purple-100 text-purple-800';
 //       case 'COMPLETADA': return 'bg-green-100 text-green-800';
 //       case 'CANCELADA': return 'bg-red-100 text-red-800';
@@ -188,9 +200,11 @@
 //     }
 //   }
 
-//   // Método para traducir los estados
+//   // ✅ ACTUALIZADO: Incluir nuevos estados
 //   getStatusName(status: string): string {
 //     switch (status) {
+//       case 'PENDIENTE_CONFIRMACION': return 'Pend. Confirmación';
+//       case 'CONFIRMADA': return 'Confirmada';
 //       case 'PENDIENTE': return 'Pendiente';
 //       case 'EN_PLANTA': return 'En Planta';
 //       case 'EN_RECEPCION': return 'En Recepción';
@@ -200,13 +214,17 @@
 //     }
 //   }
 
-//   // Verificar si se puede editar una reserva (solo pendientes)
+//   // ✅ ACTUALIZADO: Verificar si se puede editar una reserva
 //   canEdit(reservation: Reserva): boolean {
-//     return reservation.estado === 'PENDIENTE';
+//     return reservation.estado === 'PENDIENTE' ||
+//            reservation.estado === 'CONFIRMADA' ||
+//            reservation.estado === 'PENDIENTE_CONFIRMACION';
 //   }
 
-//   // Verificar si se puede cancelar una reserva (solo pendientes)
+//   // ✅ ACTUALIZADO: Verificar si se puede cancelar una reserva
 //   canCancel(reservation: Reserva): boolean {
-//     return reservation.estado === 'PENDIENTE';
+//     return reservation.estado === 'PENDIENTE' ||
+//            reservation.estado === 'CONFIRMADA' ||
+//            reservation.estado === 'PENDIENTE_CONFIRMACION';
 //   }
 // }

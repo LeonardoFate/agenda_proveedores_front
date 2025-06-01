@@ -89,12 +89,30 @@
            [ngClass]="{
              'border-orange-500': canConfirmSchedule(schedule),
              'border-blue-500': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-             'border-green-500': !schedule.tieneReserva && !canConfirmSchedule(schedule),
+             'border-green-500': !schedule.tieneReserva && !canConfirmSchedule(schedule) && schedule.areaId,
+             'border-red-500': !schedule.areaId || !schedule.andenId || !schedule.tipoServicioId,
              'border-gray-300': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
            }">
         <div class="p-6">
           <div class="flex items-start justify-between">
             <div class="flex-1">
+              <!-- ✅ ALERTA PARA HORARIOS SIN RECURSOS -->
+              <div *ngIf="!schedule.areaId || !schedule.andenId || !schedule.tipoServicioId"
+                   class="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-4 w-4 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-red-700">
+                      <strong>Sin recursos asignados:</strong> Este horario no tiene área, andén o tipo de servicio asignados. Contacte al administrador.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Información principal del horario -->
               <div class="flex items-center mb-4">
                 <div class="flex-shrink-0 mr-4">
@@ -102,14 +120,16 @@
                        [ngClass]="{
                          'bg-orange-100': canConfirmSchedule(schedule),
                          'bg-blue-100': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                         'bg-green-100': !schedule.tieneReserva && !canConfirmSchedule(schedule),
+                         'bg-green-100': !schedule.tieneReserva && !canConfirmSchedule(schedule) && schedule.areaId,
+                         'bg-red-100': !schedule.areaId || !schedule.andenId || !schedule.tipoServicioId,
                          'bg-gray-100': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
                        }">
                     <svg class="w-6 h-6"
                          [ngClass]="{
                            'text-orange-600': canConfirmSchedule(schedule),
                            'text-blue-600': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                           'text-green-600': !schedule.tieneReserva && !canConfirmSchedule(schedule),
+                           'text-green-600': !schedule.tieneReserva && !canConfirmSchedule(schedule) && schedule.areaId,
+                           'text-red-600': !schedule.areaId || !schedule.andenId || !schedule.tipoServicioId,
                            'text-gray-600': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
                          }"
                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,11 +157,21 @@
                   </div>
                   <div>
                     <p class="text-xs font-medium text-gray-500">Área - Andén</p>
-                    <p class="text-sm text-gray-900">{{ schedule.areaNombre }} - Andén {{ schedule.andenNumero }}</p>
+                    <p class="text-sm text-gray-900" *ngIf="schedule.areaNombre && schedule.andenNumero">
+                      {{ schedule.areaNombre }} - Andén {{ schedule.andenNumero }}
+                    </p>
+                    <p class="text-sm text-red-600" *ngIf="!schedule.areaNombre || !schedule.andenNumero">
+                      Sin asignar
+                    </p>
                   </div>
                   <div>
                     <p class="text-xs font-medium text-gray-500">Tipo de Servicio</p>
-                    <p class="text-sm text-gray-900">{{ schedule.tipoServicioNombre }}</p>
+                    <p class="text-sm text-gray-900" *ngIf="schedule.tipoServicioNombre">
+                      {{ schedule.tipoServicioNombre }}
+                    </p>
+                    <p class="text-sm text-red-600" *ngIf="!schedule.tipoServicioNombre">
+                      Sin asignar
+                    </p>
                   </div>
                 </div>
                 <div class="mt-3 grid grid-cols-2 gap-4">
@@ -155,7 +185,8 @@
                           [ngClass]="{
                             'bg-orange-100 text-orange-800': canConfirmSchedule(schedule),
                             'bg-blue-100 text-blue-800': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                            'bg-green-100 text-green-800': !schedule.tieneReserva && !canConfirmSchedule(schedule),
+                            'bg-green-100 text-green-800': !schedule.tieneReserva && !canConfirmSchedule(schedule) && schedule.areaId,
+                            'bg-red-100 text-red-800': !schedule.areaId || !schedule.andenId || !schedule.tipoServicioId,
                             'bg-gray-100 text-gray-800': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
                           }">
                       {{ getStatusDisplayText(schedule) }}
@@ -184,9 +215,9 @@
             <!-- Botones de acción -->
             <div class="flex-shrink-0 ml-6">
               <div class="flex flex-col space-y-2">
-                <!-- Botón CONFIRMAR para horarios disponibles -->
+                <!-- ✅ BOTÓN CONFIRMAR - Solo si tiene recursos asignados -->
                 <button
-                  *ngIf="canConfirmSchedule(schedule)"
+                  *ngIf="canConfirmSchedule(schedule) && schedule.areaId && schedule.andenId && schedule.tipoServicioId"
                   (click)="completeReservationData(schedule)"
                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
@@ -195,6 +226,17 @@
                   </svg>
                   Completar Datos
                 </button>
+
+                <!-- ✅ BOTÓN PARA CONTACTAR ADMIN (sin recursos) -->
+                <span
+                  *ngIf="!schedule.areaId || !schedule.andenId || !schedule.tipoServicioId"
+                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-100 rounded-md cursor-not-allowed"
+                >
+                  <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  Sin Recursos
+                </span>
 
                 <!-- Botón para ver reserva confirmada -->
                 <button
@@ -211,7 +253,7 @@
 
                 <!-- Estado no disponible -->
                 <span
-                  *ngIf="!canConfirmSchedule(schedule) && !schedule.tieneReserva"
+                  *ngIf="!canConfirmSchedule(schedule) && !schedule.tieneReserva && schedule.areaId"
                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md cursor-not-allowed"
                 >
                   <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -241,6 +283,7 @@
               <li>Los horarios mostrados son asignados por el administrador y <strong>no se pueden modificar</strong>.</li>
               <li>Solo necesita completar los datos del vehículo, conductor y ayudantes para confirmar la reserva.</li>
               <li>Una vez confirmado, podrá ver todos los detalles en "Mis Reservas".</li>
+              <li>Si un horario no tiene recursos asignados (área, andén, tipo de servicio), contacte al administrador.</li>
             </ul>
           </div>
         </div>

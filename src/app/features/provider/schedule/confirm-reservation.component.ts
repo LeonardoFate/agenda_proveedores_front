@@ -1,4 +1,4 @@
-// src/app/features/provider/schedule/confirm-reservation.component.ts - SIMPLIFICADO
+// src/app/features/provider/schedule/confirm-reservation.component.ts - COMPLETO
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -10,12 +10,6 @@ import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 interface ScheduleData {
-  areaId?: number;
-  areaNombre?: string;
-  andenId?: number;
-  andenNumero?: number;
-  tipoServicioId?: number;
-  tipoServicioNombre?: string;
   horaInicio?: string;
   horaFin?: string;
   tiempoDescarga?: string;
@@ -33,6 +27,13 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   selectedDate: string = '';
   scheduleData: ScheduleData | null = null;
+
+  // ✅ Datos para formulario
+  areas: any[] = [];
+  andenesPorArea: any[] = [];
+  tiposServicio: any[] = [];
+
+  // Estados
   loading = false;
   submitting = false;
   errorMessage = '';
@@ -57,6 +58,9 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(userSub);
 
+    // Cargar datos para formulario
+    this.loadFormData();
+
     // Obtener parámetros de la ruta
     const routeSub = this.route.queryParams.subscribe(params => {
       this.selectedDate = params['fecha'] || '';
@@ -66,7 +70,7 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
           this.scheduleData = JSON.parse(params['scheduleData']);
           console.log('✅ Datos de plantilla recibidos:', this.scheduleData);
 
-          // Validar que tenemos todos los datos necesarios
+          // Validar que tenemos datos básicos necesarios
           if (!this.validateScheduleData(this.scheduleData)) {
             this.errorMessage = 'Datos de plantilla incompletos. Regresando...';
             setTimeout(() => this.router.navigate(['/provider/schedule']), 3000);
@@ -95,8 +99,77 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  // ✅ CARGAR DATOS PARA EL FORMULARIO
+  private loadFormData(): void {
+    console.log('🔄 Cargando datos para formulario...');
+
+    // Cargar áreas
+    this.providerService.getAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+        console.log('✅ Áreas cargadas:', areas.length);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando áreas:', error);
+        this.errorMessage = 'Error al cargar las áreas disponibles.';
+      }
+    });
+
+    // Cargar tipos de servicio
+    this.providerService.getTiposServicio().subscribe({
+      next: (tipos) => {
+        this.tiposServicio = tipos;
+        console.log('✅ Tipos de servicio cargados:', tipos.length);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando tipos de servicio:', error);
+        this.errorMessage = 'Error al cargar tipos de servicio disponibles.';
+      }
+    });
+  }
+
+  // ✅ MÉTODO PARA CARGAR ANDENES CUANDO SE SELECCIONA ÁREA
+  onAreaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const areaIdStr = target?.value || '';
+
+    if (!areaIdStr || areaIdStr === '') {
+      this.andenesPorArea = [];
+      this.confirmForm.patchValue({ andenId: '' });
+      return;
+    }
+
+    const areaId = parseInt(areaIdStr);
+    console.log('🏢 Área seleccionada:', areaId);
+
+    if (areaId && !isNaN(areaId)) {
+      this.providerService.getAndenesByArea(areaId).subscribe({
+        next: (andenes) => {
+          this.andenesPorArea = andenes;
+          console.log('✅ Andenes cargados para área:', andenes.length);
+
+          // Limpiar selección de andén actual
+          this.confirmForm.patchValue({ andenId: '' });
+        },
+        error: (error) => {
+          console.error('❌ Error cargando andenes:', error);
+          this.andenesPorArea = [];
+          this.errorMessage = 'Error al cargar los andenes del área seleccionada.';
+        }
+      });
+    } else {
+      this.andenesPorArea = [];
+      this.confirmForm.patchValue({ andenId: '' });
+    }
+  }
+
   createConfirmForm(): FormGroup {
     return this.fb.group({
+      // ✅ RECURSOS: Proveedor debe seleccionar
+      areaId: ['', [Validators.required]],
+      andenId: ['', [Validators.required]],
+      tipoServicioId: ['', [Validators.required]],
+
       // Datos del transporte (obligatorios)
       transporteTipo: ['', [Validators.required]],
       transporteMarca: ['', [Validators.required]],
@@ -134,18 +207,19 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
     this.ayudantesArray.removeAt(index);
   }
 
-  // ✅ MÉTODO PRINCIPAL SIMPLIFICADO
+  // ✅ MÉTODO PRINCIPAL PARA ENVIAR FORMULARIO
   onSubmit(): void {
-    console.log('🚀 Iniciando creación de reserva desde plantilla...');
+    console.log('🚀 Iniciando creación de reserva completa...');
     console.log('📋 Formulario válido:', this.confirmForm.valid);
     console.log('📊 Datos de plantilla:', this.scheduleData);
+    console.log('📝 Datos del formulario:', this.confirmForm.value);
 
     if (this.confirmForm.valid && this.scheduleData) {
       this.submitting = true;
       this.errorMessage = '';
       this.successMessage = '';
 
-      // ✅ CREAR NUEVA RESERVA DIRECTAMENTE (sin buscar pendientes)
+      // Crear reserva completa
       this.createNewReservationFromTemplate();
     } else {
       console.log('❌ Formulario inválido o faltan datos de plantilla');
@@ -153,9 +227,9 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ MÉTODO SIMPLIFICADO PARA CREAR RESERVA
+  // ✅ MÉTODO PARA CREAR RESERVA COMPLETA
   private createNewReservationFromTemplate(): void {
-    console.log('📝 Creando nueva reserva desde plantilla...');
+    console.log('📝 Creando nueva reserva completa...');
 
     if (!this.currentUser) {
       this.errorMessage = 'Error: Usuario no encontrado.';
@@ -174,31 +248,35 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
             // Datos del proveedor
             proveedorId: providerInfo.id,
 
-            // Datos de la plantilla (readonly - pre-llenados)
+            // Datos de la plantilla (readonly - horarios básicos)
             fecha: this.selectedDate,
             horaInicio: this.scheduleData!.horaInicio,
             horaFin: this.scheduleData!.horaFin,
-            areaId: this.scheduleData!.areaId,
-            andenId: this.scheduleData!.andenId,
-            tipoServicioId: this.scheduleData!.tipoServicioId,
 
-            // Datos del formulario (editables - completados por proveedor)
+            // ✅ RECURSOS: Seleccionados por el proveedor
+            areaId: parseInt(this.confirmForm.get('areaId')?.value),
+            andenId: parseInt(this.confirmForm.get('andenId')?.value),
+            tipoServicioId: parseInt(this.confirmForm.get('tipoServicioId')?.value),
+
+            // Datos del transporte
             transporteTipo: this.confirmForm.get('transporteTipo')?.value,
             transporteMarca: this.confirmForm.get('transporteMarca')?.value,
             transporteModelo: this.confirmForm.get('transporteModelo')?.value,
-            transportePlaca: this.confirmForm.get('transportePlaca')?.value,
+            transportePlaca: this.confirmForm.get('transportePlaca')?.value?.toUpperCase(),
             transporteCapacidad: this.confirmForm.get('transporteCapacidad')?.value || null,
 
+            // Datos del conductor
             conductorNombres: this.confirmForm.get('conductorNombres')?.value,
             conductorApellidos: this.confirmForm.get('conductorApellidos')?.value,
             conductorCedula: this.confirmForm.get('conductorCedula')?.value,
 
+            // Datos adicionales
             numeroPalets: this.confirmForm.get('numeroPalets')?.value || null,
-            descripcion: this.confirmForm.get('observaciones')?.value || 'Reserva creada desde plantilla de horario',
+            descripcion: this.confirmForm.get('observaciones')?.value || 'Reserva confirmada por proveedor desde plantilla de horario',
             ayudantes: this.ayudantesArray.value.length > 0 ? this.ayudantesArray.value : []
           };
 
-          console.log('📤 Enviando datos de reserva:', reservaDTO);
+          console.log('📤 Enviando datos completos de reserva:', reservaDTO);
 
           // ✅ CREAR NUEVA RESERVA DIRECTAMENTE
           this.providerService.createReservation(reservaDTO)
@@ -244,13 +322,19 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
 
     switch (error.status) {
       case 400:
-        this.errorMessage = `Datos inválidos: ${error.error?.message || error.error || 'Verifique los datos ingresados'}`;
+        if (error.error && typeof error.error === 'object') {
+          // Error de validación con campos específicos
+          const validationErrors = Object.values(error.error).join(', ');
+          this.errorMessage = `Datos inválidos: ${validationErrors}`;
+        } else {
+          this.errorMessage = `Datos inválidos: ${error.error?.message || error.error || 'Verifique los datos ingresados'}`;
+        }
         break;
       case 404:
         this.errorMessage = 'No se encontraron recursos necesarios para crear la reserva.';
         break;
       case 409:
-        this.errorMessage = 'Ya existe una reserva para este horario.';
+        this.errorMessage = 'Ya existe una reserva para este horario y ubicación.';
         break;
       case 500:
         this.errorMessage = 'Error interno del servidor. Contacte al administrador.';
@@ -262,11 +346,7 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
 
   // ✅ VALIDACIÓN DE DATOS DE PLANTILLA
   private validateScheduleData(data: any): boolean {
-    const requiredFields = [
-      'areaId', 'areaNombre', 'andenId', 'andenNumero',
-      'tipoServicioId', 'tipoServicioNombre',
-      'horaInicio', 'horaFin'
-    ];
+    const requiredFields = ['horaInicio', 'horaFin'];
 
     return requiredFields.every(field => {
       const hasField = data[field] !== undefined && data[field] !== null;
@@ -318,7 +398,9 @@ export class ConfirmReservationComponent implements OnInit, OnDestroy {
 
   // ✅ MÉTODO PARA CANCELAR
   cancelForm(): void {
-    this.router.navigate(['/provider/schedule']);
+    if (confirm('¿Está seguro de cancelar? Se perderán todos los datos ingresados.')) {
+      this.router.navigate(['/provider/schedule']);
+    }
   }
 
   // ✅ MÉTODO AUXILIAR PARA FORMATEAR FECHAS

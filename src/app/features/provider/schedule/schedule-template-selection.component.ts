@@ -1,3 +1,4 @@
+// src/app/features/provider/schedule/schedule-template-selection.component.ts - ACTUALIZADO
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -114,14 +115,22 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     this.subscriptions.push(scheduleSub);
   }
 
-  // ✅ LÓGICA CORREGIDA: Determinar si un horario se puede confirmar
+  // ✅ LÓGICA CORREGIDA: Horario se puede confirmar si tiene datos básicos
   canConfirmSchedule(schedule: HorarioProveedor): boolean {
+    // ✅ NUEVO: Solo verificar que tenga horarios básicos
+    // NO importa si tiene o no área/andén/tipo servicio - el proveedor los selecciona
+
     if (schedule.puedeConfirmar) {
       return true;
     }
 
+    // ✅ Siempre permitir confirmar si tiene horarios básicos
+    if (schedule.horaInicio && schedule.horaFin) {
+      return true;
+    }
+
     if (!schedule.tieneReserva) {
-      return true; // Horario disponible para crear reserva
+      return true; // Horario disponible para crear reserva completa
     }
 
     if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
@@ -131,7 +140,7 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  // Navegar al formulario para completar datos del vehículo y conductor
+  // ✅ NAVEGACIÓN ACTUALIZADA: Solo enviar datos básicos de horario
   completeReservationData(schedule: HorarioProveedor): void {
     console.log('Completando datos para horario:', schedule);
 
@@ -139,16 +148,12 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
       queryParams: {
         fecha: this.selectedDate,
         scheduleData: JSON.stringify({
-          areaId: schedule.areaId,
-          areaNombre: schedule.areaNombre,
-          andenId: schedule.andenId,
-          andenNumero: schedule.andenNumero,
-          tipoServicioId: schedule.tipoServicioId,
-          tipoServicioNombre: schedule.tipoServicioNombre,
+          // ✅ SOLO datos básicos de la plantilla (horarios)
           horaInicio: schedule.horaInicio,
           horaFin: schedule.horaFin,
           tiempoDescarga: schedule.tiempoDescarga,
           numeroPersonas: schedule.numeroPersonas
+          // ❌ NO enviar areaId, andenId, tipoServicioId - proveedor los selecciona
         })
       }
     });
@@ -158,7 +163,7 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     this.router.navigate(['/provider/reservation', reservaId]);
   }
 
-  // Métodos auxiliares
+  // ✅ MÉTODOS AUXILIARES ACTUALIZADOS
   getConfirmableCount(): number {
     return this.availableSchedules.filter(s => this.canConfirmSchedule(s)).length;
   }
@@ -168,12 +173,14 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
   }
 
   getStatusDisplayText(schedule: HorarioProveedor): string {
+    // ✅ SIMPLIFICADO: Solo verificar si puede confirmar
     if (this.canConfirmSchedule(schedule)) {
       if (!schedule.tieneReserva) {
-        return 'Disponible para Confirmar';
-      } else {
+        return 'Disponible - Complete Datos';
+      } else if (schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
         return 'Pendiente de Completar Datos';
       }
+      return 'Disponible para Confirmar';
     }
 
     if (schedule.tieneReserva) {
@@ -187,7 +194,7 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
       }
     }
 
-    return 'No Disponible';
+    return 'Sin Horario Asignado';
   }
 
   formatDate(dateString: string): string {

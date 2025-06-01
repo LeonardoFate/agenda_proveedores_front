@@ -1,4 +1,4 @@
-<!-- src/app/features/provider/schedule/confirm-reservation.component.html -->
+<!-- src/app/features/provider/schedule/confirm-reservation.component.html - COMPLETO -->
 <div class="bg-gray-50 min-h-screen p-6">
   <div class="max-w-4xl mx-auto">
     <!-- Encabezado -->
@@ -6,7 +6,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Confirmar Reserva</h1>
-          <p class="text-gray-600">Complete los datos del vehículo y conductor para confirmar su reserva</p>
+          <p class="text-gray-600">Complete todos los datos para confirmar su horario asignado</p>
         </div>
         <div>
           <a routerLink="/provider/schedule" class="text-primary-600 hover:text-primary-700 flex items-center">
@@ -52,11 +52,11 @@
         <svg class="h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        Detalles de su Horario Asignado
+        📋 Horario Asignado (Solo Lectura)
       </h2>
 
       <div class="bg-gray-50 rounded-lg p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <p class="text-sm font-medium text-gray-500">Fecha</p>
             <p class="text-base text-gray-900">{{ formatDate(selectedDate) }}</p>
@@ -70,20 +70,25 @@
             <p class="text-base text-gray-900">{{ scheduleData?.tiempoDescarga }}</p>
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-500">Área</p>
-            <p class="text-base text-gray-900">{{ scheduleData?.areaNombre }}</p>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-gray-500">Andén</p>
-            <p class="text-base text-gray-900">Andén {{ scheduleData?.andenNumero }}</p>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-gray-500">Tipo de Servicio</p>
-            <p class="text-base text-gray-900">{{ scheduleData?.tipoServicioNombre }}</p>
-          </div>
-          <div>
             <p class="text-sm font-medium text-gray-500">Número de Personas</p>
             <p class="text-base text-gray-900">{{ scheduleData?.numeroPersonas }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instrucciones -->
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 rounded-md">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>Complete todos los campos siguientes:</strong> Los horarios ya están definidos.
+              Usted debe seleccionar el área, andén, tipo de servicio y completar los datos del vehículo y conductor.
+            </p>
           </div>
         </div>
       </div>
@@ -97,9 +102,76 @@
     <!-- Formulario de Confirmación -->
     <form *ngIf="!loading" [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="bg-white shadow-md rounded-lg overflow-hidden">
 
-      <!-- Sección 1: Datos del Transporte -->
+      <!-- Sección 1: Selección de Ubicación y Servicio -->
       <div class="p-6 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Datos del Transporte</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">🏢 Ubicación y Tipo de Servicio</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Área -->
+          <div>
+            <label for="areaId" class="block text-sm font-medium text-gray-700 mb-1">Área*</label>
+            <select
+              id="areaId"
+              formControlName="areaId"
+              (change)="onAreaChange($event)"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Seleccione un área</option>
+              <option *ngFor="let area of areas" [value]="area.id">
+                {{ area.nombre }} - {{ area.descripcion }}
+              </option>
+            </select>
+            <p *ngIf="getControlError('areaId')" class="mt-1 text-sm text-red-600">{{ getControlError('areaId') }}</p>
+          </div>
+
+          <!-- Andén -->
+          <div>
+            <label for="andenId" class="block text-sm font-medium text-gray-700 mb-1">Andén*</label>
+            <select
+              id="andenId"
+              formControlName="andenId"
+              [disabled]="andenesPorArea.length === 0"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+            >
+              <option value="">{{ andenesPorArea.length === 0 ? 'Primero seleccione un área' : 'Seleccione un andén' }}</option>
+              <option *ngFor="let anden of andenesPorArea" [value]="anden.id">
+                Andén {{ anden.numero }}
+                <span *ngIf="anden.capacidad">({{ anden.capacidad }})</span>
+                <span *ngIf="anden.exclusivoContenedor" class="text-orange-600">[Solo Contenedores]</span>
+              </option>
+            </select>
+            <p *ngIf="getControlError('andenId')" class="mt-1 text-sm text-red-600">{{ getControlError('andenId') }}</p>
+          </div>
+
+          <!-- Tipo de Servicio -->
+          <div>
+            <label for="tipoServicioId" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Servicio*</label>
+            <select
+              id="tipoServicioId"
+              formControlName="tipoServicioId"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Seleccione tipo de servicio</option>
+              <option *ngFor="let tipo of tiposServicio" [value]="tipo.id">
+                {{ tipo.nombre }} - {{ tipo.descripcion }}
+              </option>
+            </select>
+            <p *ngIf="getControlError('tipoServicioId')" class="mt-1 text-sm text-red-600">{{ getControlError('tipoServicioId') }}</p>
+          </div>
+        </div>
+
+        <!-- Ayuda visual -->
+        <div class="mt-4 text-xs text-gray-500 bg-gray-50 p-3 rounded-md">
+          💡 <strong>Guía:</strong>
+          <strong>Courier:</strong> Paquetes pequeños y entregas rápidas |
+          <strong>Camión:</strong> Carga media y distribución |
+          <strong>Contenedor:</strong> Carga grande e importaciones
+        </div>
+      </div>
+
+      <!-- Sección 2: Datos del Transporte -->
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">🚛 Datos del Transporte</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Tipo de Transporte -->
@@ -115,6 +187,7 @@
               <option value="Camioneta">Camioneta</option>
               <option value="Furgón">Furgón</option>
               <option value="Contenedor">Contenedor</option>
+              <option value="Motocicleta">Motocicleta</option>
               <option value="Otro">Otro</option>
             </select>
             <p *ngIf="getControlError('transporteTipo')" class="mt-1 text-sm text-red-600">{{ getControlError('transporteTipo') }}</p>
@@ -155,6 +228,7 @@
               formControlName="transportePlaca"
               class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
               placeholder="Ej: ABC-1234"
+              style="text-transform: uppercase"
             >
             <p *ngIf="getControlError('transportePlaca')" class="mt-1 text-sm text-red-600">{{ getControlError('transportePlaca') }}</p>
           </div>
@@ -186,9 +260,9 @@
         </div>
       </div>
 
-      <!-- Sección 2: Datos del Personal -->
-      <div class="p-6 border-b border-gray-200 bg-gray-50">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Datos del Personal</h2>
+      <!-- Sección 3: Datos del Personal -->
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">👨‍💼 Datos del Personal</h2>
 
         <!-- Datos del Conductor -->
         <div class="mb-6">
@@ -203,6 +277,7 @@
                 id="conductorNombres"
                 formControlName="conductorNombres"
                 class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Nombres completos del conductor"
               >
               <p *ngIf="getControlError('conductorNombres')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorNombres') }}</p>
             </div>
@@ -215,6 +290,7 @@
                 id="conductorApellidos"
                 formControlName="conductorApellidos"
                 class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Apellidos completos del conductor"
               >
               <p *ngIf="getControlError('conductorApellidos')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorApellidos') }}</p>
             </div>
@@ -227,6 +303,7 @@
                 id="conductorCedula"
                 formControlName="conductorCedula"
                 class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Número de cédula o documento de identidad"
               >
               <p *ngIf="getControlError('conductorCedula')" class="mt-1 text-sm text-red-600">{{ getControlError('conductorCedula') }}</p>
             </div>
@@ -246,18 +323,19 @@
             </button>
           </div>
 
-          <div *ngIf="ayudantesArray.length === 0" class="text-gray-500 text-sm">
+          <div *ngIf="ayudantesArray.length === 0" class="text-gray-500 text-sm bg-gray-50 p-3 rounded-md">
             No hay ayudantes registrados. Si necesita añadir ayudantes, haga clic en el botón "Añadir Ayudante".
           </div>
 
           <div formArrayName="ayudantes">
-            <div *ngFor="let ayudanteControl of ayudantesArray.controls; let i = index" class="border rounded-lg p-4 mb-4">
+            <div *ngFor="let ayudanteControl of ayudantesArray.controls; let i = index" class="border rounded-lg p-4 mb-4 bg-gray-50">
               <div class="flex justify-between items-center mb-3">
                 <h4 class="font-medium">Ayudante {{i + 1}}</h4>
                 <button
                   type="button"
                   (click)="removeAyudante(i)"
                   class="p-1 text-red-600 hover:text-red-800 focus:outline-none"
+                  title="Eliminar ayudante"
                 >
                   <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -273,6 +351,7 @@
                     type="text"
                     formControlName="nombres"
                     class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Nombres del ayudante"
                   >
                   <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'nombres')" class="mt-1 text-sm text-red-600">
                     {{ getFormArrayControlError(ayudantesArray, i, 'nombres') }}
@@ -286,6 +365,7 @@
                     type="text"
                     formControlName="apellidos"
                     class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Apellidos del ayudante"
                   >
                   <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'apellidos')" class="mt-1 text-sm text-red-600">
                     {{ getFormArrayControlError(ayudantesArray, i, 'apellidos') }}
@@ -299,6 +379,7 @@
                     type="text"
                     formControlName="cedula"
                     class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                    placeholder="Número de cédula del ayudante"
                   >
                   <p *ngIf="getFormArrayControlError(ayudantesArray, i, 'cedula')" class="mt-1 text-sm text-red-600">
                     {{ getFormArrayControlError(ayudantesArray, i, 'cedula') }}
@@ -310,9 +391,9 @@
         </div>
       </div>
 
-      <!-- Sección 3: Observaciones -->
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Observaciones</h2>
+      <!-- Sección 4: Observaciones -->
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">📝 Observaciones</h2>
         <div>
           <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones adicionales (opcional)</label>
           <textarea
@@ -320,7 +401,7 @@
             formControlName="observaciones"
             rows="3"
             class="w-full p-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-            placeholder="Detalles adicionales sobre la visita..."
+            placeholder="Detalles adicionales sobre la visita, instrucciones especiales, etc."
           ></textarea>
         </div>
       </div>
@@ -344,7 +425,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Confirmar Reserva
+          {{ submitting ? 'Creando Reserva...' : 'Confirmar Reserva' }}
         </button>
       </div>
     </form>
