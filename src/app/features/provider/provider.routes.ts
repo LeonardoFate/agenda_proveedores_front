@@ -29,20 +29,20 @@ export const PROVIDER_ROUTES: Routes = [
     canActivate: [authGuard],
     data: { requiredRole: 'PROVEEDOR' }
   },
-//   {
-//     path: 'my-reservations',
-//     loadComponent: () =>
-//       import('./reservations/my-reservations.component').then(m => m.MyReservationsComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
-//   {
-//     path: 'reservation/:id',
-//     loadComponent: () =>
-//       import('./reservations/reservation-detail.component').then(m => m.ReservationDetailComponent),
-//     canActivate: [authGuard],
-//     data: { requiredRole: 'PROVEEDOR' }
-//   },
+  {
+    path: 'my-reservations',
+    loadComponent: () =>
+      import('./reservations/my-reservations.component').then(m => m.MyReservationsComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
+  {
+    path: 'reservation/:id',
+    loadComponent: () =>
+      import('./reservations/reservation-detail.component').then(m => m.ReservationDetailComponent),
+    canActivate: [authGuard],
+    data: { requiredRole: 'PROVEEDOR' }
+  },
   {
     path: 'statistics',
     loadComponent: () =>
