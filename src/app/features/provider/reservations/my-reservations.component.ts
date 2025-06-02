@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProviderService } from '../../../core/services/provider.service';
 import { User } from '../../../core/models/user.model';
-import { Reserva } from '../../../core/models/reserva.model';
+import { Reserva, EstadoReserva } from '../../../core/models/reserva.model'; // ✅ AGREGAR EstadoReserva
 import { Proveedor } from '../../../core/models/proveedor.model';
 
 @Component({
@@ -150,29 +150,29 @@ export class MyReservationsComponent implements OnInit {
     this.filteredReservations = filtered;
   }
 
-  cancelReservation(id: number): void {
-    if (confirm('¿Está seguro de cancelar esta reserva? Esta acción no se puede deshacer.')) {
-      this.loading = true;
+cancelReservation(id: number): void {
+  if (confirm('¿Está seguro de cancelar esta reserva? Esta acción no se puede deshacer.')) {
+    this.loading = true;
 
-      this.providerService.cancelReservation(id).subscribe({
-        next: () => {
-          // Actualizar el estado en nuestro array local
-          const reservation = this.reservations.find(r => r.id === id);
-          if (reservation) {
-            reservation.estado = 'CANCELADA';
-          }
-
-          this.applyFilters();
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error canceling reservation', error);
-          this.loading = false;
-          alert('Ocurrió un error al cancelar la reserva. Intente nuevamente.');
+    this.providerService.cancelReservation(id).subscribe({
+      next: () => {
+        // ✅ Usar el enum en lugar del string literal
+        const reservation = this.reservations.find(r => r.id === id);
+        if (reservation) {
+          reservation.estado = EstadoReserva.CANCELADA; // ✅ Usar enum
         }
-      });
-    }
+
+        this.applyFilters();
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error canceling reservation', error);
+        this.loading = false;
+        alert('Ocurrió un error al cancelar la reserva. Intente nuevamente.');
+      }
+    });
   }
+}
 
   // Método para formatear fechas
   formatDate(dateString: string): string {

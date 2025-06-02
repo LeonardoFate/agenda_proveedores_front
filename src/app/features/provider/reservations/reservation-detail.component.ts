@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProviderService } from '../../../core/services/provider.service';
 import { User } from '../../../core/models/user.model';
-import { ReservaDetalle } from '../../../core/models/reserva.model';
+import { ReservaDetalle, EstadoReserva } from '../../../core/models/reserva.model'; // ✅ Import correcto
 
 @Component({
   selector: 'app-reservation-detail',
@@ -74,11 +74,14 @@ export class ReservationDetailComponent implements OnInit {
     });
   }
 
-  cancelReservation(): void {
+cancelReservation(): void {
     if (!this.reservation) return;
 
-    if (this.reservation.estado !== 'PENDIENTE') {
-      alert('Solo se pueden cancelar reservas en estado Pendiente.');
+    // ✅ Ahora debería funcionar correctamente
+    if (this.reservation.estado !== EstadoReserva.PENDIENTE &&
+        this.reservation.estado !== EstadoReserva.PENDIENTE_CONFIRMACION &&
+        this.reservation.estado !== EstadoReserva.CONFIRMADA) {
+      alert('Solo se pueden cancelar reservas en estados: Pendiente, Pendiente Confirmación o Confirmada.');
       return;
     }
 
@@ -87,9 +90,9 @@ export class ReservationDetailComponent implements OnInit {
 
       this.providerService.cancelReservation(this.reservationId).subscribe({
         next: () => {
-          // Actualizar el estado en nuestro objeto local
+          // ✅ Ahora debería funcionar sin errores
           if (this.reservation) {
-            this.reservation.estado = 'CANCELADA';
+            this.reservation.estado = EstadoReserva.CANCELADA;
           }
 
           this.loadingAction = false;
