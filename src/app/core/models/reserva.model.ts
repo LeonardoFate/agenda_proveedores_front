@@ -1,3 +1,5 @@
+// src/app/core/models/reserva.model.ts - ACTUALIZADO
+
 export interface Reserva {
   id?: number;
   proveedorId: number;
@@ -14,7 +16,7 @@ export interface Reserva {
   estado?: EstadoReserva;
   descripcion?: string;
 
-  // ✅ NUEVO CAMPO
+  // ✅ CAMPO EXISTENTE
   numeroPalets?: number;
 
   // Datos de transporte
@@ -44,6 +46,7 @@ export interface Ayudante {
   cedula: string;
 }
 
+// ✅ ENUM ACTUALIZADO CON TODOS LOS ESTADOS
 export enum EstadoReserva {
   PENDIENTE_CONFIRMACION = 'PENDIENTE_CONFIRMACION', // ✅ NUEVO
   CONFIRMADA = 'CONFIRMADA', // ✅ NUEVO
@@ -51,7 +54,7 @@ export enum EstadoReserva {
   EN_PLANTA = 'EN_PLANTA',
   EN_RECEPCION = 'EN_RECEPCION',
   COMPLETADA = 'COMPLETADA',
-  CANCELADA = 'CANCELADA'
+  CANCELADA = 'CANCELADA' // ✅ ESTE FALTABA
 }
 
 export interface DisponibilidadAnden {

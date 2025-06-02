@@ -1,4 +1,4 @@
-// src/app/features/provider/schedule/schedule-template-selection.component.ts - ACTUALIZADO
+// src/app/features/provider/schedule/schedule-template-selection.component.ts - CORREGIDO COMPLETO
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -115,67 +115,73 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     this.subscriptions.push(scheduleSub);
   }
 
-  // ✅ LÓGICA CORREGIDA: Horario se puede confirmar si tiene datos básicos
+  // ✅ CORREGIDO: Lógica para verificar si puede confirmar
   canConfirmSchedule(schedule: HorarioProveedor): boolean {
-  // ✅ NUEVO: Solo verificar que tenga horarios básicos
-  // El proveedor seleccionará área, andén y tipo de servicio en el formulario
+    const hasBasicSchedule = schedule.horaInicio && schedule.horaFin;
 
-  // Verificar que tenga horarios básicos
-  const hasBasicSchedule = schedule.horaInicio && schedule.horaFin;
+    if (!hasBasicSchedule) {
+      console.log('❌ Sin horarios básicos:', schedule);
+      return false;
+    }
 
-  if (!hasBasicSchedule) {
-    console.log('❌ Sin horarios básicos:', schedule);
+    // ✅ CORREGIDO: Solo puede confirmar si NO tiene reserva o está PENDIENTE_CONFIRMACION
+    if (!schedule.tieneReserva) {
+      console.log('✅ Sin reserva, puede crear nueva');
+      return true; // Sin reserva = puede crear nueva
+    }
+
+    if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
+      console.log('✅ Reserva pendiente, puede completar datos');
+      return true; // PRE-RESERVA = puede completar datos
+    }
+
+    if (schedule.puedeConfirmar) {
+      console.log('✅ puedeConfirmar = true');
+      return true;
+    }
+
+    console.log('❌ No puede confirmar:', schedule.estadoReserva);
+    // ✅ NUEVO: Si ya está CONFIRMADA u otro estado, NO puede confirmar
     return false;
   }
 
-  // ✅ PERMITIR CONFIRMAR EN ESTOS CASOS:
-
-  // 1. No tiene reserva = Puede crear nueva
-  if (!schedule.tieneReserva) {
-    console.log('✅ Sin reserva, puede crear nueva');
-    return true;
-  }
-
-  // 2. Tiene reserva pero está PENDIENTE_CONFIRMACION = Puede completar datos
-  if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
-    console.log('✅ Reserva pendiente, puede completar datos');
-    return true;
-  }
-
-  // 3. Si tiene puedeConfirmar = true
-  if (schedule.puedeConfirmar) {
-    console.log('✅ puedeConfirmar = true');
-    return true;
-  }
-
-  console.log('❌ No puede confirmar:', schedule.estadoReserva);
-  return false;
-}
-
-// ✅ MÉTODO CORREGIDO: Remover la validación de recursos
-completeReservationData(schedule: HorarioProveedor): void {
-  console.log('📝 Completando datos para horario:', schedule);
-
-  // ✅ REMOVER ESTA VALIDACIÓN QUE BLOQUEA
-  // if (!schedule.areaId || !schedule.andenId || !schedule.tipoServicioId) {
-  //   this.errorMessage = 'Este horario no tiene recursos asignados. Contacte al administrador.';
-  //   return;
-  // }
-
-  // ✅ NAVEGAR DIRECTAMENTE AL FORMULARIO
-  this.router.navigate(['/provider/confirm-reservation'], {
-    queryParams: {
-      fecha: this.selectedDate,
-      scheduleData: JSON.stringify({
-        horaInicio: schedule.horaInicio,
-        horaFin: schedule.horaFin,
-        tiempoDescarga: schedule.tiempoDescarga,
-        numeroPersonas: schedule.numeroPersonas
-        // ❌ NO enviar areaId, andenId, tipoServicioId - proveedor los selecciona
-      })
+  // ✅ NUEVO: Método para el texto del botón
+  getButtonText(schedule: HorarioProveedor): string {
+    if (!schedule.tieneReserva) {
+      return 'Crear Reserva';
     }
-  });
-}
+
+    if (schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
+      return 'Completar Datos';
+    }
+
+    return 'Confirmar';
+  }
+
+  // ✅ MÉTODO CORREGIDO: Remover la validación de recursos
+  completeReservationData(schedule: HorarioProveedor): void {
+    console.log('📝 Completando datos para horario:', schedule);
+
+    // ✅ REMOVER ESTA VALIDACIÓN QUE BLOQUEA
+    // if (!schedule.areaId || !schedule.andenId || !schedule.tipoServicioId) {
+    //   this.errorMessage = 'Este horario no tiene recursos asignados. Contacte al administrador.';
+    //   return;
+    // }
+
+    // ✅ NAVEGAR DIRECTAMENTE AL FORMULARIO
+    this.router.navigate(['/provider/confirm-reservation'], {
+      queryParams: {
+        fecha: this.selectedDate,
+        scheduleData: JSON.stringify({
+          horaInicio: schedule.horaInicio,
+          horaFin: schedule.horaFin,
+          tiempoDescarga: schedule.tiempoDescarga,
+          numeroPersonas: schedule.numeroPersonas
+          // ❌ NO enviar areaId, andenId, tipoServicioId - proveedor los selecciona
+        })
+      }
+    });
+  }
 
   viewReservation(reservaId: number): void {
     this.router.navigate(['/provider/reservation', reservaId]);
@@ -187,32 +193,33 @@ completeReservationData(schedule: HorarioProveedor): void {
   }
 
   getConfirmedCount(): number {
-    return this.availableSchedules.filter(s => s.tieneReserva && s.estadoReserva === 'CONFIRMADA').length;
+    return this.availableSchedules.filter(s =>
+      s.tieneReserva && s.estadoReserva === 'CONFIRMADA'
+    ).length;
   }
 
+  // ✅ CORREGIDO: Texto de estado más preciso
   getStatusDisplayText(schedule: HorarioProveedor): string {
-    // ✅ SIMPLIFICADO: Solo verificar si puede confirmar
-    if (this.canConfirmSchedule(schedule)) {
-      if (!schedule.tieneReserva) {
-        return 'Disponible - Complete Datos';
-      } else if (schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
-        return 'Pendiente de Completar Datos';
-      }
-      return 'Disponible para Confirmar';
+    if (!schedule.tieneReserva) {
+      return 'Sin Reserva - Disponible para Crear';
     }
 
-    if (schedule.tieneReserva) {
-      switch (schedule.estadoReserva) {
-        case 'CONFIRMADA':
-          return 'Confirmada';
-        case 'PENDIENTE_CONFIRMACION':
-          return 'Pendiente Confirmación';
-        default:
-          return schedule.estadoReserva || 'En Proceso';
-      }
+    switch (schedule.estadoReserva) {
+      case 'PENDIENTE_CONFIRMACION':
+        return 'Pendiente - Complete Datos';
+      case 'CONFIRMADA':
+        return 'Reserva Confirmada';
+      case 'EN_PLANTA':
+        return 'En Planta';
+      case 'EN_RECEPCION':
+        return 'En Recepción';
+      case 'COMPLETADA':
+        return 'Completada';
+      case 'CANCELADA':
+        return 'Cancelada';
+      default:
+        return schedule.estadoReserva || 'Estado Desconocido';
     }
-
-    return 'Sin Horario Asignado';
   }
 
   formatDate(dateString: string): string {

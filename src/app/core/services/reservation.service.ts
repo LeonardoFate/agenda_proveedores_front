@@ -68,22 +68,21 @@ export class ReservationService {
   // ===== MÉTODOS AUXILIARES PARA NUEVOS ESTADOS =====
 
   // Verificar si una reserva puede cambiar de estado
-  canChangeStatus(currentStatus: EstadoReserva, newStatus: EstadoReserva): boolean {
-    const validTransitions: { [key in EstadoReserva]: EstadoReserva[] } = {
-      [EstadoReserva.PENDIENTE_CONFIRMACION]: [EstadoReserva.CONFIRMADA, EstadoReserva.CANCELADA],
-      [EstadoReserva.CONFIRMADA]: [EstadoReserva.EN_PLANTA, EstadoReserva.CANCELADA],
-      [EstadoReserva.PENDIENTE]: [EstadoReserva.EN_PLANTA, EstadoReserva.CANCELADA],
-      [EstadoReserva.EN_PLANTA]: [EstadoReserva.EN_RECEPCION],
-      [EstadoReserva.EN_RECEPCION]: [EstadoReserva.COMPLETADA],
-      [EstadoReserva.COMPLETADA]: [],
-      [EstadoReserva.CANCELADA]: []
-    };
+canChangeStatus(currentStatus: EstadoReserva, newStatus: EstadoReserva): boolean {
+  const validTransitions: { [key in EstadoReserva]: EstadoReserva[] } = {
+    [EstadoReserva.PENDIENTE_CONFIRMACION]: [EstadoReserva.CONFIRMADA, EstadoReserva.CANCELADA],
+    [EstadoReserva.CONFIRMADA]: [EstadoReserva.EN_PLANTA, EstadoReserva.CANCELADA],
+    [EstadoReserva.PENDIENTE]: [EstadoReserva.EN_PLANTA, EstadoReserva.CANCELADA],
+    [EstadoReserva.EN_PLANTA]: [EstadoReserva.EN_RECEPCION],
+    [EstadoReserva.EN_RECEPCION]: [EstadoReserva.COMPLETADA],
+    [EstadoReserva.COMPLETADA]: [],
+    [EstadoReserva.CANCELADA]: []
+  };
 
-    return validTransitions[currentStatus]?.includes(newStatus) || false;
-  }
+  return validTransitions[currentStatus]?.includes(newStatus) || false;
+}
 
 // ✅ ACTUALIZAR en reservation.service.ts
-
 getAvailableStatuses(currentStatus: EstadoReserva): EstadoReserva[] {
   const validTransitions: { [key in EstadoReserva]: EstadoReserva[] } = {
     [EstadoReserva.PENDIENTE_CONFIRMACION]: [EstadoReserva.CONFIRMADA, EstadoReserva.CANCELADA],

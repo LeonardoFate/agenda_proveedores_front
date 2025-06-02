@@ -89,8 +89,10 @@
            [ngClass]="{
              'border-orange-500': canConfirmSchedule(schedule),
              'border-blue-500': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-             'border-green-500': !schedule.tieneReserva && !canConfirmSchedule(schedule),
-             'border-gray-300': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
+             'border-green-500': schedule.tieneReserva && (schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION'),
+             'border-purple-500': schedule.tieneReserva && schedule.estadoReserva === 'EN_PLANTA',
+             'border-red-500': schedule.tieneReserva && schedule.estadoReserva === 'CANCELADA',
+             'border-gray-300': !schedule.tieneReserva && !canConfirmSchedule(schedule)
            }">
         <div class="p-6">
           <div class="flex items-start justify-between">
@@ -120,15 +122,19 @@
                        [ngClass]="{
                          'bg-orange-100': canConfirmSchedule(schedule),
                          'bg-blue-100': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                         'bg-green-100': !schedule.tieneReserva && !canConfirmSchedule(schedule),
-                         'bg-gray-100': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
+                         'bg-green-100': schedule.tieneReserva && (schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION'),
+                         'bg-purple-100': schedule.tieneReserva && schedule.estadoReserva === 'EN_PLANTA',
+                         'bg-red-100': schedule.tieneReserva && schedule.estadoReserva === 'CANCELADA',
+                         'bg-gray-100': !schedule.tieneReserva && !canConfirmSchedule(schedule)
                        }">
                     <svg class="w-6 h-6"
                          [ngClass]="{
                            'text-orange-600': canConfirmSchedule(schedule),
                            'text-blue-600': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                           'text-green-600': !schedule.tieneReserva && !canConfirmSchedule(schedule),
-                           'text-gray-600': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
+                           'text-green-600': schedule.tieneReserva && (schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION'),
+                           'text-purple-600': schedule.tieneReserva && schedule.estadoReserva === 'EN_PLANTA',
+                           'text-red-600': schedule.tieneReserva && schedule.estadoReserva === 'CANCELADA',
+                           'text-gray-600': !schedule.tieneReserva && !canConfirmSchedule(schedule)
                          }"
                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -183,8 +189,10 @@
                           [ngClass]="{
                             'bg-orange-100 text-orange-800': canConfirmSchedule(schedule),
                             'bg-blue-100 text-blue-800': schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA',
-                            'bg-green-100 text-green-800': !schedule.tieneReserva && !canConfirmSchedule(schedule),
-                            'bg-gray-100 text-gray-800': schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && !canConfirmSchedule(schedule)
+                            'bg-green-100 text-green-800': schedule.tieneReserva && (schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION'),
+                            'bg-purple-100 text-purple-800': schedule.tieneReserva && schedule.estadoReserva === 'EN_PLANTA',
+                            'bg-red-100 text-red-800': schedule.tieneReserva && schedule.estadoReserva === 'CANCELADA',
+                            'bg-gray-100 text-gray-800': !schedule.tieneReserva && !canConfirmSchedule(schedule)
                           }">
                       {{ getStatusDisplayText(schedule) }}
                     </span>
@@ -207,13 +215,65 @@
                   </div>
                 </div>
               </div>
+
+              <!-- ✅ NUEVO: Mensaje para reservas confirmadas -->
+              <div *ngIf="schedule.tieneReserva && schedule.estadoReserva === 'CONFIRMADA'" class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs text-blue-700">
+                      <strong>Reserva confirmada:</strong> Su horario ya está confirmado y activo. Puede ver los detalles completos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ NUEVO: Mensaje para otros estados -->
+              <div *ngIf="schedule.tieneReserva && !canConfirmSchedule(schedule) && schedule.estadoReserva !== 'CONFIRMADA'"
+                   class="border rounded-md p-3"
+                   [ngClass]="{
+                     'bg-green-50 border-green-200': schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION',
+                     'bg-purple-50 border-purple-200': schedule.estadoReserva === 'EN_PLANTA',
+                     'bg-red-50 border-red-200': schedule.estadoReserva === 'CANCELADA',
+                     'bg-gray-50 border-gray-200': !['COMPLETADA', 'EN_RECEPCION', 'EN_PLANTA', 'CANCELADA'].includes(schedule.estadoReserva || '')
+                   }">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-4 w-4"
+                         [ngClass]="{
+                           'text-green-400': schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION',
+                           'text-purple-400': schedule.estadoReserva === 'EN_PLANTA',
+                           'text-red-400': schedule.estadoReserva === 'CANCELADA',
+                           'text-gray-400': !['COMPLETADA', 'EN_RECEPCION', 'EN_PLANTA', 'CANCELADA'].includes(schedule.estadoReserva || '')
+                         }"
+                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-2">
+                    <p class="text-xs"
+                       [ngClass]="{
+                         'text-green-700': schedule.estadoReserva === 'COMPLETADA' || schedule.estadoReserva === 'EN_RECEPCION',
+                         'text-purple-700': schedule.estadoReserva === 'EN_PLANTA',
+                         'text-red-700': schedule.estadoReserva === 'CANCELADA',
+                         'text-gray-700': !['COMPLETADA', 'EN_RECEPCION', 'EN_PLANTA', 'CANCELADA'].includes(schedule.estadoReserva || '')
+                       }">
+                      <strong>Estado actual:</strong> {{ getStatusDisplayText(schedule) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Botones de acción -->
             <div class="flex-shrink-0 ml-6">
               <div class="flex flex-col space-y-2">
 
-                <!-- ✅ BOTÓN CONFIRMAR - SIMPLIFICADO: Solo verificar si puede confirmar -->
+                <!-- ✅ BOTÓN CONFIRMAR - Solo para estados que PUEDEN confirmarse -->
                 <button
                   *ngIf="canConfirmSchedule(schedule)"
                   (click)="completeReservationData(schedule)"
@@ -222,7 +282,7 @@
                   <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  {{ schedule.tieneReserva ? 'Completar Datos' : 'Crear Reserva' }}
+                  {{ getButtonText(schedule) }}
                 </button>
 
                 <!-- ✅ BOTÓN PARA VER RESERVA CONFIRMADA -->
@@ -238,7 +298,20 @@
                   Ver Reserva
                 </button>
 
-                <!-- ✅ ESTADO NO DISPONIBLE PARA CONFIRMAR -->
+                <!-- ✅ BOTÓN PARA VER OTRAS RESERVAS EN PROCESO -->
+                <button
+                  *ngIf="schedule.tieneReserva && schedule.reservaId && ['EN_PLANTA', 'EN_RECEPCION', 'COMPLETADA'].includes(schedule.estadoReserva || '')"
+                  (click)="viewReservation(schedule.reservaId!)"
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Ver Detalles
+                </button>
+
+                <!-- ✅ ESTADO NO DISPONIBLE PARA CONFIRMAR (sin horario) -->
                 <span
                   *ngIf="!canConfirmSchedule(schedule) && !schedule.tieneReserva"
                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md cursor-not-allowed"
@@ -249,15 +322,15 @@
                   Sin Horario
                 </span>
 
-                <!-- ✅ ESTADO RESERVA YA PROCESADA -->
+                <!-- ✅ ESTADO RESERVA CANCELADA -->
                 <span
-                  *ngIf="schedule.tieneReserva && schedule.estadoReserva !== 'CONFIRMADA' && schedule.estadoReserva !== 'PENDIENTE_CONFIRMACION'"
-                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-md cursor-not-allowed"
+                  *ngIf="schedule.tieneReserva && schedule.estadoReserva === 'CANCELADA'"
+                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-100 rounded-md cursor-not-allowed"
                 >
                   <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  {{ schedule.estadoReserva }}
+                  Cancelada
                 </span>
               </div>
             </div>
@@ -282,6 +355,7 @@
               <li><strong>Puede confirmar cualquier horario</strong> completando los datos del vehículo y conductor.</li>
               <li>Si no se muestran área/andén/tipo de servicio, los <strong>seleccionará usted</strong> en el formulario.</li>
               <li>Una vez confirmado, podrá ver todos los detalles en "Mis Reservas".</li>
+              <li><strong>Reservas confirmadas</strong> aparecen con estado azul y botón "Ver Reserva".</li>
             </ul>
           </div>
         </div>
