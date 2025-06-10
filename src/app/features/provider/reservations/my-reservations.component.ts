@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProviderService } from '../../../core/services/provider.service';
 import { User } from '../../../core/models/user.model';
-import { Reserva, EstadoReserva } from '../../../core/models/reserva.model'; // ✅ AGREGAR EstadoReserva
+import { Reserva, EstadoReserva } from '../../../core/models/reserva.model';
 import { Proveedor } from '../../../core/models/proveedor.model';
 
 @Component({
@@ -71,21 +71,32 @@ export class MyReservationsComponent implements OnInit {
       return;
     }
 
-    // ✅ USAR EL NUEVO MÉTODO CON FILTROS
     console.log('Cargando reservas para proveedor:', this.providerInfo.nombre);
 
-    // Obtener reservas de los últimos 6 meses
+    // ✅ SOLUCIÓN: Ampliar el rango para incluir reservas futuras
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    const today = new Date();
+
+    // ✅ CAMBIO: Incluir también reservas futuras (próximos 6 meses)
+    const sixMonthsForward = new Date();
+    sixMonthsForward.setMonth(sixMonthsForward.getMonth() + 6);
 
     this.providerService.getMyReservationsFiltered(
-      sixMonthsAgo.toISOString().split('T')[0],
-      today.toISOString().split('T')[0]
+      sixMonthsAgo.toISOString().split('T')[0],      // Desde hace 6 meses
+      sixMonthsForward.toISOString().split('T')[0]   // Hasta dentro de 6 meses
     ).subscribe({
       next: (data) => {
-        this.reservations = data;
-        console.log('Reservas cargadas:', data.length);
+        console.log('📊 TODAS las reservas recibidas:', data.length);
+        console.log('📊 Estados recibidos:', data.map(r => `ID${r.id}: ${r.estado} - ${r.fecha}`));
+
+        // ✅ FILTRAR TODOS LOS ESTADOS EXCEPTO PENDIENTE_CONFIRMACION
+        this.reservations = data.filter(reserva =>
+          reserva.estado !== 'PENDIENTE_CONFIRMACION'
+        );
+
+        console.log('✅ Reservas después del filtro (sin pendientes):', this.reservations.length);
+        console.log('✅ Estados finales:', this.reservations.map(r => `ID${r.id}: ${r.estado} - ${r.fecha}`));
+
         this.applyFilters();
         this.loading = false;
       },
@@ -148,36 +159,47 @@ export class MyReservationsComponent implements OnInit {
     });
 
     this.filteredReservations = filtered;
+    console.log('🎯 Reservas después de aplicar filtros:', this.filteredReservations.length);
   }
 
-cancelReservation(id: number): void {
-  if (confirm('¿Está seguro de cancelar esta reserva? Esta acción no se puede deshacer.')) {
-    this.loading = true;
+  cancelReservation(id: number): void {
+    if (confirm('¿Está seguro de cancelar esta reserva? Esta acción no se puede deshacer.')) {
+      this.loading = true;
 
-    this.providerService.cancelReservation(id).subscribe({
-      next: () => {
-        // ✅ Usar el enum en lugar del string literal
-        const reservation = this.reservations.find(r => r.id === id);
-        if (reservation) {
-          reservation.estado = EstadoReserva.CANCELADA; // ✅ Usar enum
+      this.providerService.cancelReservation(id).subscribe({
+        next: () => {
+          // ✅ Usar el enum en lugar del string literal
+          const reservation = this.reservations.find(r => r.id === id);
+          if (reservation) {
+            reservation.estado = EstadoReserva.CANCELADA;
+          }
+
+          this.applyFilters();
+          this.loading = false;
+          console.log('✅ Reserva cancelada exitosamente:', id);
+        },
+        error: (error) => {
+          console.error('Error canceling reservation', error);
+          this.loading = false;
+          alert('Ocurrió un error al cancelar la reserva. Intente nuevamente.');
         }
-
-        this.applyFilters();
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error canceling reservation', error);
-        this.loading = false;
-        alert('Ocurrió un error al cancelar la reserva. Intente nuevamente.');
-      }
-    });
+      });
+    }
   }
-}
 
-  // Método para formatear fechas
+  // ✅ MÉTODO CORREGIDO: Formateo de fechas sin problemas de zona horaria
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
+    if (!dateString) return '';
+
+    // ✅ CREAR FECHA EN ZONA LOCAL para evitar problemas de UTC
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // Los meses van de 0-11
+
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
   // Método para formatear horas

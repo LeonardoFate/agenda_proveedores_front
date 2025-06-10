@@ -243,10 +243,19 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Métodos de formateo existentes
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
-  }
+formatDate(dateString: string): string {
+  if (!dateString) return '';
+
+  // ✅ SOLUCIÓN: Crear fecha en zona local
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
 
   formatTime(timeString: string | null | undefined): string {
     if (!timeString) return '-';

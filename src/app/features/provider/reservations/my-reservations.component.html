@@ -1,8 +1,9 @@
 <div class="bg-gray-50 min-h-screen p-6">
+    <!-- ✅ HEADER ACTUALIZADO -->
     <div class="bg-white shadow-md rounded-lg p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 mb-2">Mis Reservas</h1>
-        <p class="text-gray-600">Gestión de visitas programadas</p>
+        <p class="text-gray-600">Gestión de reservas activas (excluyendo las pendientes de confirmación)</p>
       </div>
       <div class="mt-4 sm:mt-0">
         <a
@@ -12,7 +13,7 @@
           <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Nueva Reserva
+          Confirmar Nuevos Horarios
         </a>
       </div>
     </div>
@@ -23,7 +24,7 @@
     </div>
 
     <div *ngIf="!loading">
-      <!-- Filtros -->
+      <!-- ✅ FILTROS ACTUALIZADOS -->
       <div class="bg-white shadow-md rounded-lg p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Filtro de fecha -->
@@ -42,7 +43,7 @@
             </select>
           </div>
 
-          <!-- Filtro de estado -->
+          <!-- ✅ FILTRO DE ESTADO ACTUALIZADO (SIN PENDIENTE_CONFIRMACION) -->
           <div>
             <label for="status-filter" class="block text-sm font-medium text-gray-700">Estado</label>
             <select
@@ -52,6 +53,7 @@
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
             >
               <option value="">Todos</option>
+              <option value="CONFIRMADA">Confirmada</option>
               <option value="PENDIENTE">Pendiente</option>
               <option value="EN_PLANTA">En Planta</option>
               <option value="EN_RECEPCION">En Recepción</option>
@@ -69,7 +71,7 @@
                 id="search"
                 [(ngModel)]="searchTerm"
                 (input)="applyFilters()"
-                placeholder="Buscar por área, tipo..."
+                placeholder="Buscar por área, tipo, placa..."
                 class="focus:ring-primary-500 focus:border-primary-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
               >
               <button
@@ -133,14 +135,37 @@
                   </button>
                 </td>
               </tr>
+              <!-- ✅ MENSAJE ACTUALIZADO CUANDO NO HAY RESULTADOS -->
               <tr *ngIf="filteredReservations.length === 0">
                 <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                   No se encontraron reservas que coincidan con los criterios de búsqueda.
+                  <br>
+                  <span class="text-xs text-gray-400">
+                    (Las reservas pendientes de confirmación no se muestran aquí)
+                  </span>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <!-- ✅ MENSAJE INFORMATIVO ACTUALIZADO -->
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md mt-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>Se muestran todas las reservas excepto las pendientes de confirmación.</strong>
+              Para gestionar horarios pendientes, ve a
+              <a routerLink="/provider/schedule" class="underline font-medium">Confirmar Horarios</a>.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+</div>
