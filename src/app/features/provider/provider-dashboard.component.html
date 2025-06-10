@@ -118,7 +118,7 @@
         </div>
         <ul *ngIf="getUpcomingReservations().length > 0" class="divide-y divide-gray-200">
           <li *ngFor="let reservation of getUpcomingReservations()" class="p-4 hover:bg-gray-50">
-            <a [routerLink]="['/provider/reservation', reservation.id]" class="block">
+            <a [routerLink]="['/provider/schedule']" class="block">
               <div class="flex items-center">
                 <div class="text-center font-medium text-gray-800 w-20">
                   {{ formatDate(reservation.fecha) }}
@@ -141,7 +141,7 @@
           </li>
         </ul>
         <div class="px-6 py-3 bg-gray-50 text-right">
-          <a routerLink="/provider/my-reservations" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+          <a routerLink="/provider/schedule" class="text-sm font-medium text-primary-600 hover:text-primary-500">
             Ver todas las reservas
           </a>
         </div>

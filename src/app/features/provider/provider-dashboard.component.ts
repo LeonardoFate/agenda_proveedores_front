@@ -212,7 +212,7 @@ getUpcomingReservations(): Reserva[] {
 
   getRecentReservations(): Reserva[] {
     return this.reservations
-      .filter(r => r.estado === 'COMPLETADA' || r.estado === 'CANCELADA')
+      .filter(r => r.estado === 'CONFIRMADA' || r.estado === 'CANCELADA')
       .sort((a, b) => {
         const dateA = new Date(a.fecha).getTime();
         const dateB = new Date(b.fecha).getTime();
