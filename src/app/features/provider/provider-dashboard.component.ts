@@ -186,29 +186,29 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     }).length;
   }
 
-  getUpcomingReservations(): Reserva[] {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+getUpcomingReservations(): Reserva[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    return this.reservations
-      .filter(r => {
-        const reservaDate = new Date(r.fecha);
-        return reservaDate >= today && (r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE_CONFIRMACION');
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.fecha).getTime();
-        const dateB = new Date(b.fecha).getTime();
+  return this.reservations
+    .filter(r => {
+      const reservaDate = new Date(r.fecha);
+      return reservaDate >= today && r.estado !== 'CONFIRMADA';
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.fecha).getTime();
+      const dateB = new Date(b.fecha).getTime();
 
-        if (dateA !== dateB) return dateA - dateB;
+      if (dateA !== dateB) return dateA - dateB;
 
-        // Si hay hora de inicio, usar para ordenar
-        if (a.horaInicio && b.horaInicio) {
-          return a.horaInicio.localeCompare(b.horaInicio);
-        }
-        return 0;
-      })
-      .slice(0, 3);
-  }
+      if (a.horaInicio && b.horaInicio) {
+        return a.horaInicio.localeCompare(b.horaInicio);
+      }
+      return 0;
+    })
+    .slice(0, 3);
+}
+
 
   getRecentReservations(): Reserva[] {
     return this.reservations
