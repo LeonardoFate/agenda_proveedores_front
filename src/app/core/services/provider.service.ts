@@ -63,37 +63,58 @@ export class ProviderService {
       );
   }
 
-//   // Obtener reserva pendiente de confirmación
-//   getPendingReservation(fecha: string): Observable<ReservaDetalle> {
+  // ✅ NUEVO MÉTODO AGREGADO: Obtener reservas del proveedor por fecha
+getReservationByDate(fecha: string): Observable<any[]> {
+  // ✅ USAR DIRECTAMENTE EL MÉTODO QUE FUNCIONA
+  return this.getMyReservationsFiltered(fecha, fecha)
+    .pipe(
+      catchError(error => {
+        console.error('❌ Error al obtener reservas por fecha:', error);
+        return throwError(() => error);
+      })
+    );
+}
+  //   getReservationByDate(fecha: string): Observable<any[]> {
 //     const params = new HttpParams().set('fecha', fecha);
 
-//     return this.http.get<ReservaDetalle>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
+//     console.log('🔍 Buscando reservas para fecha:', fecha);
+
+//     return this.http.get<any[]>(`${this.reservasUrl}/mis-reservas-fecha`, { params })
 //       .pipe(
-//         tap(reserva => console.log('Reserva pendiente obtenida:', reserva)),
+//         tap(reservas => {
+//           console.log('📥 Reservas encontradas para fecha ' + fecha + ':', reservas);
+//           reservas.forEach((reserva, index) => {
+//             console.log(`   ${index + 1}. Reserva ID ${reserva.id}:`, {
+//               estado: reserva.estado,
+//               horaInicio: reserva.horaInicio || reserva.hora_inicio,
+//               horaFin: reserva.horaFin || reserva.hora_fin,
+//               fecha: reserva.fecha
+//             });
+//           });
+//         }),
 //         catchError(error => {
-//           console.error('Error al obtener reserva pendiente:', error);
+//           console.error('❌ Error al obtener reservas por fecha:', error);
+//           // Si el endpoint no existe, devolver array vacío en lugar de error
+//           if (error.status === 404) {
+//             console.log('ℹ️ Endpoint no encontrado, usando método alternativo');
+//             return this.getMyReservationsFiltered(fecha, fecha);
+//           }
 //           return throwError(() => error);
 //         })
 //       );
 //   }
 
-//   // Confirmar reserva (completar datos de transporte)
-//   confirmReservation(reservaData: Reserva): Observable<ReservaDetalle> {
-//     console.log('Confirmando reserva con datos:', reservaData);
+  // ✅ MÉTODO ALTERNATIVO: Si el endpoint anterior no existe
+  getMyReservationsForSpecificDate(fecha: string): Observable<any[]> {
+    console.log('🔍 Método alternativo: buscando reservas para fecha:', fecha);
 
-//     const headers = new HttpHeaders({
-//       'Content-Type': 'application/json'
-//     });
-
-//     return this.http.post<ReservaDetalle>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
-//       .pipe(
-//         tap(response => console.log('Reserva confirmada exitosamente:', response)),
-//         catchError(error => {
-//           console.error('Error al confirmar reserva:', error);
-//           return throwError(() => error);
-//         })
-//       );
-//   }
+    return this.getMyReservationsFiltered(fecha, fecha)
+      .pipe(
+        tap(reservas => {
+          console.log('📥 Reservas filtradas por fecha:', reservas);
+        })
+      );
+  }
 
   // Obtener mis reservas con filtros opcionales
   getMyReservationsFiltered(fechaInicio?: string, fechaFin?: string): Observable<Reserva[]> {
@@ -162,43 +183,6 @@ export class ProviderService {
         })
       );
   }
-
-//   // Crear una nueva reserva (solo para admin ahora)
-//   createReservation(reservation: Reserva): Observable<ReservaDetalle> {
-//     console.log('URL de creación de reservas:', this.reservasUrl);
-//     console.log('Datos de la reserva a crear:', JSON.stringify(reservation));
-
-//     const headers = new HttpHeaders({
-//       'Content-Type': 'application/json'
-//     });
-
-//     return this.http.post<ReservaDetalle>(this.reservasUrl, reservation, { headers })
-//       .pipe(
-//         tap(response => console.log('Respuesta del servidor:', response)),
-//         catchError(error => {
-//           console.error('Error completo al crear reserva:', error);
-//           return throwError(() => error);
-//         })
-//       );
-//   }
-
-  // Actualizar una reserva existente
-//   updateReservation(id: number, reservation: Reserva): Observable<ReservaDetalle> {
-//     console.log('Actualizando reserva ID:', id);
-//     console.log('Datos para actualizar:', JSON.stringify(reservation));
-
-//     const headers = new HttpHeaders({
-//       'Content-Type': 'application/json'
-//     });
-
-//     return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
-//       .pipe(
-//         catchError(error => {
-//           console.error('Error al actualizar reserva:', error);
-//           return throwError(() => error);
-//         })
-//       );
-//   }
 
   // Cancelar una reserva
   cancelReservation(id: number): Observable<void> {
@@ -418,116 +402,107 @@ export class ProviderService {
         })
       );
   }
-deletePlantillasMultiple(ids: number[]): Observable<any> {
-  console.log('🔄 Eliminando plantillas (request directo):', ids);
 
-  return this.http.request('DELETE', `${this.plantillasUrl}/bulk-delete`, {
-    body: ids
-  }).pipe(
-    tap(response => {
-      console.log('✅ Eliminación exitosa:', response);
-    }),
-    catchError(error => {
-      console.error('❌ Error en eliminación:', error);
-      return throwError(() => error);
-    })
-  );
-}
-updateReservation(id: number, reservation: any): Observable<ReservaDetalle> {
-  console.log('Actualizando reserva ID:', id);
-  console.log('Datos para actualizar:', JSON.stringify(reservation));
+  deletePlantillasMultiple(ids: number[]): Observable<any> {
+    console.log('🔄 Eliminando plantillas (request directo):', ids);
 
-  const headers = new HttpHeaders({
-    'Content-Type': 'application/json'
-  });
-
-  return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
-    .pipe(
+    return this.http.request('DELETE', `${this.plantillasUrl}/bulk-delete`, {
+      body: ids
+    }).pipe(
+      tap(response => {
+        console.log('✅ Eliminación exitosa:', response);
+      }),
       catchError(error => {
-        console.error('Error al actualizar reserva:', error);
+        console.error('❌ Error en eliminación:', error);
         return throwError(() => error);
       })
     );
-}
-updatePendingReservation(reservaId: number, updateData: any): Observable<ReservaDetalle> {
-  console.log('Actualizando reserva pendiente ID:', reservaId);
-  console.log('Datos para actualizar:', JSON.stringify(updateData));
+  }
 
-  const headers = new HttpHeaders({
-    'Content-Type': 'application/json'
-  });
+  updateReservation(id: number, reservation: any): Observable<ReservaDetalle> {
+    console.log('Actualizando reserva ID:', id);
+    console.log('Datos para actualizar:', JSON.stringify(reservation));
 
-  return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${reservaId}/actualizar-pendiente`, updateData, { headers })
-    .pipe(
-      tap(response => console.log('Reserva pendiente actualizada:', response)),
-      catchError(error => {
-        console.error('Error al actualizar reserva pendiente:', error);
-        return throwError(() => error);
-      })
-    );
-}
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
 
-// getPendingReservation(fecha: string): Observable<ReservaDetalle> {
-//   const params = new HttpParams().set('fecha', fecha);
+    return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${id}`, reservation, { headers })
+      .pipe(
+        catchError(error => {
+          console.error('Error al actualizar reserva:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
-//   return this.http.get<ReservaDetalle>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
-//     .pipe(
-//       tap(reserva => console.log('Reserva pendiente obtenida:', reserva)),
-//       catchError(error => {
-//         console.error('Error al obtener reserva pendiente:', error);
-//         return throwError(() => error);
-//       })
-//     );
-// }
-// ✅ MÉTODO CORRECTO: Confirmar PRE-RESERVA (no crear nueva)
-confirmReservation(reservaData: any): Observable<any> {
-  console.log('🔄 Confirmando PRE-RESERVA con datos:', reservaData);
+  updatePendingReservation(reservaId: number, updateData: any): Observable<ReservaDetalle> {
+    console.log('Actualizando reserva pendiente ID:', reservaId);
+    console.log('Datos para actualizar:', JSON.stringify(updateData));
 
-  const headers = new HttpHeaders({
-    'Content-Type': 'application/json'
-  });
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
 
-  // ✅ USAR EL ENDPOINT CORRECTO: /confirmar
-  return this.http.post<any>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
-    .pipe(
-      tap(response => console.log('✅ PRE-RESERVA confirmada exitosamente:', response)),
-      catchError(error => {
-        console.error('❌ Error al confirmar PRE-RESERVA:', error);
-        return throwError(() => error);
-      })
-    );
-}
+    return this.http.put<ReservaDetalle>(`${this.reservasUrl}/${reservaId}/actualizar-pendiente`, updateData, { headers })
+      .pipe(
+        tap(response => console.log('Reserva pendiente actualizada:', response)),
+        catchError(error => {
+          console.error('Error al actualizar reserva pendiente:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
-// ✅ NUEVO: Obtener PRE-RESERVA pendiente de confirmación
-getPendingReservation(fecha: string): Observable<any> {
-  const params = new HttpParams().set('fecha', fecha);
+  // ✅ MÉTODO CORRECTO: Confirmar PRE-RESERVA (no crear nueva)
+  confirmReservation(reservaData: any): Observable<any> {
+    console.log('🔄 Confirmando PRE-RESERVA con datos:', reservaData);
 
-  return this.http.get<any>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
-    .pipe(
-      tap(reserva => console.log('✅ PRE-RESERVA pendiente obtenida:', reserva)),
-      catchError(error => {
-        console.error('❌ Error al obtener PRE-RESERVA pendiente:', error);
-        return throwError(() => error);
-      })
-    );
-}
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
 
-// ✅ ACTUALIZADO: Método para crear reservas (solo para admin)
-createReservation(reservation: any): Observable<any> {
-  console.log('🔄 Creando nueva reserva (admin):', reservation);
+    // ✅ USAR EL ENDPOINT CORRECTO: /confirmar
+    return this.http.post<any>(`${this.reservasUrl}/confirmar`, reservaData, { headers })
+      .pipe(
+        tap(response => console.log('✅ PRE-RESERVA confirmada exitosamente:', response)),
+        catchError(error => {
+          console.error('❌ Error al confirmar PRE-RESERVA:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
-  const headers = new HttpHeaders({
-    'Content-Type': 'application/json'
-  });
+  // ✅ NUEVO: Obtener PRE-RESERVA pendiente de confirmación
+  getPendingReservation(fecha: string): Observable<any> {
+    const params = new HttpParams().set('fecha', fecha);
 
-  // ✅ ENDPOINT PARA ADMIN: POST /api/reservas
-  return this.http.post<any>(this.reservasUrl, reservation, { headers })
-    .pipe(
-      tap(response => console.log('✅ Reserva creada exitosamente:', response)),
-      catchError(error => {
-        console.error('❌ Error al crear reserva:', error);
-        return throwError(() => error);
-      })
-    );
-}
+    return this.http.get<any>(`${this.reservasUrl}/mi-reserva-pendiente`, { params })
+      .pipe(
+        tap(reserva => console.log('✅ PRE-RESERVA pendiente obtenida:', reserva)),
+        catchError(error => {
+          console.error('❌ Error al obtener PRE-RESERVA pendiente:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ✅ ACTUALIZADO: Método para crear reservas (solo para admin)
+  createReservation(reservation: any): Observable<any> {
+    console.log('🔄 Creando nueva reserva (admin):', reservation);
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    // ✅ ENDPOINT PARA ADMIN: POST /api/reservas
+    return this.http.post<any>(this.reservasUrl, reservation, { headers })
+      .pipe(
+        tap(response => console.log('✅ Reserva creada exitosamente:', response)),
+        catchError(error => {
+          console.error('❌ Error al crear reserva:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 }

@@ -1,4 +1,4 @@
-// src/app/features/provider/schedule/schedule-template-selection.component.ts - CORREGIDO COMPLETO
+// src/app/features/provider/schedule/schedule-template-selection.component.ts - LIMPIO
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -7,8 +7,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ProviderService } from '../../../core/services/provider.service';
 import { User } from '../../../core/models/user.model';
 import { HorarioProveedor } from '../../../core/models/horario-proveedor.model';
-import { Subscription } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-schedule-template-selection',
@@ -74,78 +74,132 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.availableSchedules = [];
 
-    console.log('Cargando horarios para fecha:', this.selectedDate);
-
     const scheduleSub = this.providerService.getMySchedule(this.selectedDate)
       .pipe(
         catchError(error => {
-          console.error('Error al cargar horario individual:', error);
           return this.providerService.getMyWeekSchedule(this.selectedDate).pipe(
             catchError(weekError => {
-              console.error('Error al cargar horarios semanales:', weekError);
               if (error.status === 404 || weekError.status === 404) {
-                this.availableSchedules = [];
-                return [];
+                return of([]);
               }
               this.errorMessage = 'Error al cargar los horarios asignados.';
               throw weekError;
             })
           );
         }),
+        switchMap(scheduleData => {
+          let schedules: HorarioProveedor[] = [];
+
+          if (Array.isArray(scheduleData)) {
+            schedules = scheduleData.filter(schedule => schedule.fecha === this.selectedDate);
+          } else if (scheduleData && typeof scheduleData === 'object') {
+            schedules = [scheduleData];
+          }
+
+          if (schedules.length === 0) {
+            return of([]);
+          }
+
+          const reservationChecks = schedules.map(schedule =>
+            this.checkAndUpdateScheduleReservation(schedule)
+          );
+
+          return forkJoin(reservationChecks);
+        }),
         finalize(() => {
           this.loading = false;
         })
       )
       .subscribe({
-        next: (data) => {
-          console.log('Datos recibidos:', data);
-
-          if (Array.isArray(data)) {
-            this.availableSchedules = data.filter(schedule => schedule.fecha === this.selectedDate);
-          } else if (data && typeof data === 'object') {
-            this.availableSchedules = [data];
-          } else {
-            this.availableSchedules = [];
-          }
-
-          console.log('Horarios procesados:', this.availableSchedules);
+        next: (updatedSchedules) => {
+          this.availableSchedules = updatedSchedules;
+        },
+        error: (error) => {
+          this.errorMessage = 'Error al cargar los horarios y reservas.';
         }
       });
 
     this.subscriptions.push(scheduleSub);
   }
 
-  // ✅ CORREGIDO: Lógica para verificar si puede confirmar
+  private checkAndUpdateScheduleReservation(schedule: HorarioProveedor) {
+    if (schedule.tieneReserva === true && schedule.estadoReserva && schedule.reservaId) {
+      return of(schedule);
+    }
+
+    return this.providerService.getReservationByDate(this.selectedDate)
+      .pipe(
+        catchError(error => {
+          return this.providerService.getMyReservationsFiltered(this.selectedDate, this.selectedDate);
+        }),
+        map(reservations => {
+          const matchingReservation = this.findMatchingReservation(schedule, reservations);
+
+          if (matchingReservation) {
+            schedule.tieneReserva = true;
+            schedule.estadoReserva = matchingReservation.estado;
+            schedule.reservaId = matchingReservation.id;
+
+            if (matchingReservation.areaId) schedule.areaId = matchingReservation.areaId;
+            if (matchingReservation.areaNombre) schedule.areaNombre = matchingReservation.areaNombre;
+            if (matchingReservation.andenId) schedule.andenId = matchingReservation.andenId;
+            if (matchingReservation.andenNumero) schedule.andenNumero = matchingReservation.andenNumero;
+            if (matchingReservation.tipoServicioId) schedule.tipoServicioId = matchingReservation.tipoServicioId;
+            if (matchingReservation.tipoServicioNombre) schedule.tipoServicioNombre = matchingReservation.tipoServicioNombre;
+          } else {
+            schedule.tieneReserva = false;
+            schedule.estadoReserva = undefined;
+            schedule.reservaId = undefined;
+          }
+
+          return schedule;
+        }),
+        catchError(error => {
+          schedule.tieneReserva = false;
+          schedule.estadoReserva = undefined;
+          schedule.reservaId = undefined;
+
+          return of(schedule);
+        })
+      );
+  }
+
+  private findMatchingReservation(schedule: HorarioProveedor, reservations: any[]): any | null {
+    if (!reservations || reservations.length === 0) {
+      return null;
+    }
+
+    return reservations.find(reservation => {
+      const reservationStart = reservation.horaInicio || reservation.hora_inicio;
+      const reservationEnd = reservation.horaFin || reservation.hora_fin;
+
+      return reservationStart === schedule.horaInicio &&
+             reservationEnd === schedule.horaFin;
+    });
+  }
+
   canConfirmSchedule(schedule: HorarioProveedor): boolean {
     const hasBasicSchedule = schedule.horaInicio && schedule.horaFin;
 
     if (!hasBasicSchedule) {
-      console.log('❌ Sin horarios básicos:', schedule);
       return false;
     }
 
-    // ✅ CORREGIDO: Solo puede confirmar si NO tiene reserva o está PENDIENTE_CONFIRMACION
     if (!schedule.tieneReserva) {
-      console.log('✅ Sin reserva, puede crear nueva');
-      return true; // Sin reserva = puede crear nueva
-    }
-
-    if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
-      console.log('✅ Reserva pendiente, puede completar datos');
-      return true; // PRE-RESERVA = puede completar datos
-    }
-
-    if (schedule.puedeConfirmar) {
-      console.log('✅ puedeConfirmar = true');
       return true;
     }
 
-    console.log('❌ No puede confirmar:', schedule.estadoReserva);
-    // ✅ NUEVO: Si ya está CONFIRMADA u otro estado, NO puede confirmar
+    if (schedule.tieneReserva && schedule.estadoReserva === 'PENDIENTE_CONFIRMACION') {
+      return true;
+    }
+
+    if (schedule.puedeConfirmar) {
+      return true;
+    }
+
     return false;
   }
 
-  // ✅ NUEVO: Método para el texto del botón
   getButtonText(schedule: HorarioProveedor): string {
     if (!schedule.tieneReserva) {
       return 'Crear Reserva';
@@ -158,26 +212,22 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     return 'Confirmar';
   }
 
-  // ✅ MÉTODO CORREGIDO: Remover la validación de recursos
   completeReservationData(schedule: HorarioProveedor): void {
-    console.log('📝 Completando datos para horario:', schedule);
-
-    // ✅ REMOVER ESTA VALIDACIÓN QUE BLOQUEA
-    // if (!schedule.areaId || !schedule.andenId || !schedule.tipoServicioId) {
-    //   this.errorMessage = 'Este horario no tiene recursos asignados. Contacte al administrador.';
-    //   return;
-    // }
-
-    // ✅ NAVEGAR DIRECTAMENTE AL FORMULARIO
     this.router.navigate(['/provider/confirm-reservation'], {
       queryParams: {
         fecha: this.selectedDate,
+        reservaId: schedule.reservaId || null,
         scheduleData: JSON.stringify({
           horaInicio: schedule.horaInicio,
           horaFin: schedule.horaFin,
           tiempoDescarga: schedule.tiempoDescarga,
-          numeroPersonas: schedule.numeroPersonas
-          // ❌ NO enviar areaId, andenId, tipoServicioId - proveedor los selecciona
+          numeroPersonas: schedule.numeroPersonas,
+          areaId: schedule.areaId,
+          andenId: schedule.andenId,
+          tipoServicioId: schedule.tipoServicioId,
+          areaNombre: schedule.areaNombre,
+          andenNumero: schedule.andenNumero,
+          tipoServicioNombre: schedule.tipoServicioNombre
         })
       }
     });
@@ -187,7 +237,6 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     this.router.navigate(['/provider/reservation', reservaId]);
   }
 
-  // ✅ MÉTODOS AUXILIARES ACTUALIZADOS
   getConfirmableCount(): number {
     return this.availableSchedules.filter(s => this.canConfirmSchedule(s)).length;
   }
@@ -198,7 +247,6 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     ).length;
   }
 
-  // ✅ CORREGIDO: Texto de estado más preciso
   getStatusDisplayText(schedule: HorarioProveedor): string {
     if (!schedule.tieneReserva) {
       return 'Sin Reserva - Disponible para Crear';
@@ -222,18 +270,17 @@ export class ScheduleTemplateSelectionComponent implements OnInit, OnDestroy {
     }
   }
 
-formatDate(dateString: string): string {
-  if (!dateString) return '';
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
 
-  // Crear fecha en zona local para evitar problemas de UTC
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day); // Los meses van de 0-11
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
 
-  return date.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
 }
