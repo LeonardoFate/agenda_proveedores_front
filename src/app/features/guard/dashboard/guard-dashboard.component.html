@@ -94,7 +94,8 @@
               <a [routerLink]="['/guard/entry', reservation.id]" class="block">
                 <div class="flex items-center">
                   <div class="text-center font-medium text-sm text-gray-800 w-16">
-                    {{ formatTime(reservation.horaInicio) }}
+                    {{ formatTime(reservation.horaInicio || '00:00') }}
+
                   </div>
                   <div class="ml-4 flex-1">
                     <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
@@ -130,7 +131,7 @@
               <a [routerLink]="['/guard/entry', reservation.id]" class="block">
                 <div class="flex items-center">
                   <div class="text-center font-medium text-sm text-gray-800 w-16">
-                    {{ formatTime(reservation.horaInicio) }}
+                    {{ formatTime(reservation.horaInicio || '00:00') }}
                   </div>
                   <div class="ml-4 flex-1">
                     <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
