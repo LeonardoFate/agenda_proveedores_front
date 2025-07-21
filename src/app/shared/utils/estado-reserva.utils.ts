@@ -7,8 +7,6 @@ export class EstadoReservaUtils {
         return 'warning';
       case EstadoReserva.CONFIRMADA:
         return 'info';
-      case EstadoReserva.PENDIENTE:
-        return 'secondary';
       case EstadoReserva.EN_PLANTA:
         return 'primary';
       case EstadoReserva.EN_RECEPCION:
@@ -28,8 +26,6 @@ export class EstadoReservaUtils {
         return 'Pendiente Confirmación';
       case EstadoReserva.CONFIRMADA:
         return 'Confirmada';
-      case EstadoReserva.PENDIENTE:
-        return 'Pendiente';
       case EstadoReserva.EN_PLANTA:
         return 'En Planta';
       case EstadoReserva.EN_RECEPCION:

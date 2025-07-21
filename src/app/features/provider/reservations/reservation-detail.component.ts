@@ -78,7 +78,7 @@ cancelReservation(): void {
     if (!this.reservation) return;
 
     // ✅ Ahora debería funcionar correctamente
-    if (this.reservation.estado !== EstadoReserva.PENDIENTE &&
+    if (
         this.reservation.estado !== EstadoReserva.PENDIENTE_CONFIRMACION &&
         this.reservation.estado !== EstadoReserva.CONFIRMADA) {
       alert('Solo se pueden cancelar reservas en estados: Pendiente, Pendiente Confirmación o Confirmada.');
@@ -226,12 +226,12 @@ formatDate(dateString: string): string {
 
   // Verificar si se puede editar una reserva (solo pendientes)
   canEdit(): boolean {
-    return this.reservation?.estado === 'PENDIENTE';
+    return this.reservation?.estado === 'CONFIRMADA';
   }
 
   // Verificar si se puede cancelar una reserva (solo pendientes)
   canCancel(): boolean {
-    return this.reservation?.estado === 'PENDIENTE';
+    return this.reservation?.estado === 'CONFIRMADA';
   }
 
   // Verificar si se pueden subir documentos

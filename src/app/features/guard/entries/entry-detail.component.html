@@ -40,7 +40,7 @@
 
                 <div class="mt-4 md:mt-0 flex flex-wrap space-x-2">
                     <!-- Botones de acción según el estado -->
-                    <button *ngIf="reservation.estado === 'PENDIENTE'" (click)="startTimeRecord('INGRESO_PLANTA')"
+                    <button *ngIf="reservation.estado === 'CONFIRMADA'" (click)="startTimeRecord('INGRESO_PLANTA')"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">

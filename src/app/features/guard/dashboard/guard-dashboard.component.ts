@@ -79,7 +79,7 @@ export class GuardDashboardComponent implements OnInit, OnDestroy {
     console.log('Calculando estadísticas con', this.todaysReservations.length, 'reservas');
 
     this.stats.totalToday = this.todaysReservations.length;
-    this.stats.pendingToday = this.todaysReservations.filter(r => r.estado === 'PENDIENTE').length;
+    this.stats.pendingToday = this.todaysReservations.filter(r => r.estado === 'CONFIRMADA').length;
     this.stats.inPlantToday = this.todaysReservations.filter(r =>
       r.estado === 'EN_PLANTA' || r.estado === 'EN_RECEPCION'
     ).length;
@@ -90,7 +90,7 @@ export class GuardDashboardComponent implements OnInit, OnDestroy {
 
 getNextReservations(): Reserva[] {
   return this.todaysReservations
-    .filter(r => r.estado === 'PENDIENTE')
+    .filter(r => r.estado === 'CONFIRMADA')
     .sort((a, b) => {
       // ✅ Verificar que ambos valores existan
       if (!a.horaInicio || !b.horaInicio) return 0;
@@ -101,7 +101,7 @@ getNextReservations(): Reserva[] {
 
 getRecentActivity(): Reserva[] {
   return this.todaysReservations
-    .filter(r => r.estado !== 'PENDIENTE')
+    .filter(r => r.estado !== 'CONFIRMADA')
     .sort((a, b) => {
       // ✅ Verificar que ambos valores existan
       if (!a.horaInicio || !b.horaInicio) return 0;

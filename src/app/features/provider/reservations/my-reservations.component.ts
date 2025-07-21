@@ -238,15 +238,13 @@ export class MyReservationsComponent implements OnInit {
 
   // ✅ ACTUALIZADO: Verificar si se puede editar una reserva
   canEdit(reservation: Reserva): boolean {
-    return reservation.estado === 'PENDIENTE' ||
-           reservation.estado === 'CONFIRMADA' ||
+    return reservation.estado === 'CONFIRMADA' ||
            reservation.estado === 'PENDIENTE_CONFIRMACION';
   }
 
   // ✅ ACTUALIZADO: Verificar si se puede cancelar una reserva
   canCancel(reservation: Reserva): boolean {
-    return reservation.estado === 'PENDIENTE' ||
-           reservation.estado === 'CONFIRMADA' ||
+    return reservation.estado === 'CONFIRMADA' ||
            reservation.estado === 'PENDIENTE_CONFIRMACION';
   }
 }

@@ -112,12 +112,11 @@
                 <div class="flex justify-center space-x-2">
 
                   <!-- BOTÓN DE INGRESO: Para reservas CONFIRMADAS o PENDIENTES -->
-                  <button
-                    *ngIf="(reservation.estado === 'CONFIRMADA' || reservation.estado === 'PENDIENTE') && !loading"
-                    (click)="startTimeRecord(reservation.id || 0, 'INGRESO_PLANTA')"
-                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                    title="Registrar ingreso del vehículo"
-                  >
+                 <button
+  *ngIf="reservation.estado === 'CONFIRMADA' && !loading"
+  (click)="startTimeRecord(reservation.id || 0, 'INGRESO_PLANTA')"
+  class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700"
+>
                     Registrar Ingreso
                   </button>
 
