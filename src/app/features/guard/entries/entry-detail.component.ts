@@ -137,18 +137,18 @@ export class EntryDetailComponent implements OnInit, OnDestroy {
     return this.timeRecords.some(record => record.tipo === 'SALIDA_PLANTA');
   }
 
-  // ✅ Método para procesar un ingreso a planta
-private processIngreso(type: string): void {
-  const startSub = this.reservationService.startTimeRecord(
-    this.reservationId,
-    this.currentUser!.id,
-    type
-  ).pipe(
-    switchMap(response => {
-      console.log('Registro de tiempo iniciado:', response);
 
-      // ✅ SIMPLIFICAR: Solo verificar CONFIRMADA (sin PENDIENTE)
-      if (type === 'INGRESO_PLANTA' && this.reservation?.estado === 'CONFIRMADA') {
+  // ✅ Método para procesar un ingreso a planta
+  private processIngreso(type: string): void {
+    const startSub = this.reservationService.startTimeRecord(
+      this.reservationId,
+      this.currentUser!.id,
+      type
+    ).pipe(
+      switchMap(response => {
+        console.log('Registro de tiempo iniciado:', response);
+// Si es un ingreso a planta, actualizar el estado de la reserva
+        if (type === 'INGRESO_PLANTA' && this.reservation?.estado === 'CONFIRMADA') {
         console.log('Actualizando estado de reserva a EN_PLANTA');
         return this.reservationService.updateReservationStatus(
           this.reservationId,
@@ -157,9 +157,31 @@ private processIngreso(type: string): void {
       }
       return of(this.reservation);
     }),
-    // ... resto del código igual
-  );
-}
+      tap(updatedReservation => {
+        if (updatedReservation) {
+          this.reservation = updatedReservation as ReservaDetalle;
+        }
+        this.successMessage = 'Ingreso registrado correctamente';
+      }),
+      // Asegurar que finalize siempre se ejecute, independientemente del resultado
+      finalize(() => {
+        this.loadingAction = false;
+        this.loadTimeRecords();  // Recargar registros después de todas las operaciones
+      })
+    ).subscribe({
+      next: () => {
+        // El caso de éxito ya se maneja en el operador tap() de arriba
+        console.log('Proceso de ingreso completado exitosamente');
+      },
+      error: (error) => {
+        console.error('Error en proceso de ingreso:', error);
+        this.errorMessage = 'Ocurrió un error al registrar el ingreso. Intente nuevamente.';
+        // El estado de carga se resetea en finalize()
+      }
+    });
+    this.subscriptions.push(startSub);
+  }
+
 
   // ✅ Método para procesar una salida de planta con finalización automática
   private processSalida(): void {

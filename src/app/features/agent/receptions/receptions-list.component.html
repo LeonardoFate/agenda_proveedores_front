@@ -86,19 +86,19 @@
                   {{ reservation.id }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatTime(reservation.horaInicio) }} - {{ formatTime(reservation.horaFin) }}
+                  {{ formatTime(reservation.horaInicio || '') }} - {{ formatTime(reservation.horaFin || '') }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre }}</div>
-                  <div class="text-sm text-gray-500">{{ reservation.tipoServicioNombre }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ reservation.proveedorNombre || 'Sin nombre' }}</div>
+                  <div class="text-sm text-gray-500">{{ reservation.tipoServicioNombre || 'Sin tipo' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ reservation.areaNombre }}</div>
-                  <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero }}</div>
+                  <div class="text-sm text-gray-900">{{ reservation.areaNombre || 'Sin área' }}</div>
+                  <div class="text-sm text-gray-500">Andén {{ reservation.andenNumero || 'N/A' }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado || 'PENDIENTE')">
-                    {{ getStatusName(reservation.estado || 'PENDIENTE') }}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="getStatusClass(reservation.estado)">
+                    {{ getStatusName(reservation.estado) }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">

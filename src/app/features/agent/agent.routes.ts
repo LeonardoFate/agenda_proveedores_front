@@ -9,28 +9,28 @@ export const AGENT_ROUTES: Routes = [
       redirectTo: 'dashboard',
       pathMatch: 'full'
     },
-    // {
-    //   path: 'dashboard',
-    //   loadComponent: () => import('./dashboard/agent-dashboard.component').then(m => m.AgentDashboardComponent),
-    //   canActivate: [authGuard],
-    //   data: { requiredRole: 'AGENTE' }
-    // },
+    {
+      path: 'dashboard',
+      loadComponent: () => import('./dashboard/agent-dashboard.component').then(m => m.AgentDashboardComponent),
+      canActivate: [authGuard],
+      data: { requiredRole: 'AGENTE' }
+    },
     {
         path: 'docks',
         loadComponent: () => import('./docks/docks-management.component').then(m => m.DocksManagementComponent),
         canActivate: [authGuard],
         data: { requiredRole: 'AGENTE' }
       },
-    //   {
-    //     path: 'receptions',
-    //     loadComponent: () => import('./receptions/receptions-list.component').then(m => m.ReceptionsListComponent),
-    //     canActivate: [authGuard],
-    //     data: { requiredRole: 'AGENTE' }
-    //   },
-    //   {
-    //     path: 'reception/:id',
-    //     loadComponent: () => import('./receptions/reception-detail/reception-detail.component').then(m => m.ReceptionDetailComponent),
-    //     canActivate: [authGuard],
-    //     data: { requiredRole: 'AGENTE' }
-    //   }
+      {
+        path: 'receptions',
+        loadComponent: () => import('./receptions/receptions-list.component').then(m => m.ReceptionsListComponent),
+        canActivate: [authGuard],
+        data: { requiredRole: 'AGENTE' }
+      },
+      {
+        path: 'reception/:id',
+        loadComponent: () => import('./receptions/reception-detail/reception-detail.component').then(m => m.ReceptionDetailComponent),
+        canActivate: [authGuard],
+        data: { requiredRole: 'AGENTE' }
+      }
     ];
