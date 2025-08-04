@@ -1,8 +1,8 @@
-<!-- src/app/features/admin/reports/report-dashboard.component.html -->
+<!-- src/app/features/admin/reports/report-dashboard.component.html - ACTUALIZADO -->
 <div class="bg-gray-50 min-h-screen p-6">
     <div class="bg-white shadow-md rounded-lg p-6 mb-6">
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Reportes y Estadísticas</h1>
-      <p class="text-gray-600">Visualización y exportación de informes del sistema</p>
+      <p class="text-gray-600">Visualización y análisis de datos del sistema</p>
     </div>
 
     <!-- Loader -->
@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <!-- Exportar reportes
+    <!-- ✅ COMENTADO TEMPORALMENTE - Exportar reportes
     <div class="bg-white shadow-md rounded-lg p-6 mb-6">
       <div class="flex justify-between items-center">
         <h2 class="text-lg font-semibold text-gray-700">Exportar reporte</h2>
@@ -71,24 +71,45 @@
         <nav class="-mb-px flex">
           <button
             (click)="setActiveTab('reservations')"
-            class="py-4 px-6 font-medium text-sm"
-            [ngClass]="activeTab === 'reservations' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="py-4 px-6 font-medium text-sm border-b-2 transition-all duration-200"
+            [ngClass]="activeTab === 'reservations' ?
+              'border-primary-500 text-primary-600 bg-primary-50' :
+              'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'"
           >
-            Reservas
+            <div class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Reservas
+            </div>
           </button>
           <button
             (click)="setActiveTab('efficiency')"
-            class="py-4 px-6 font-medium text-sm"
-            [ngClass]="activeTab === 'efficiency' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="py-4 px-6 font-medium text-sm border-b-2 transition-all duration-200"
+            [ngClass]="activeTab === 'efficiency' ?
+              'border-primary-500 text-primary-600 bg-primary-50' :
+              'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'"
           >
-            Eficiencia
+            <div class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Eficiencia
+            </div>
           </button>
           <button
             (click)="setActiveTab('providers')"
-            class="py-4 px-6 font-medium text-sm"
-            [ngClass]="activeTab === 'providers' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="py-4 px-6 font-medium text-sm border-b-2 transition-all duration-200"
+            [ngClass]="activeTab === 'providers' ?
+              'border-primary-500 text-primary-600 bg-primary-50' :
+              'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'"
           >
-            Proveedores
+            <div class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              Proveedores
+            </div>
           </button>
         </nav>
       </div>

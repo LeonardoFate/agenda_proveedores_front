@@ -16,9 +16,9 @@ export class ProviderReportComponent implements OnInit, OnChanges {
   loading: boolean = false;
   providerStats: ProviderStat[] = [];
 
-  // Para ordenamiento
-  sortField: keyof ProviderStat = 'reservationsCount';
-  sortDirection: 'asc' | 'desc' = 'desc';
+  // Valores promedio calculados
+  averageCompletionRate: number = 0;
+  averageTimeFormatted: string = 'Sin datos'; // ✅ Cambiar a string
 
   constructor(private reportService: ReportService) {}
 
@@ -40,7 +40,20 @@ export class ProviderReportComponent implements OnInit, OnChanges {
       this.reportService.getProviderStats(this.startDate, this.endDate).subscribe({
         next: (data) => {
           this.providerStats = data;
-          this.sortData(); // Ordenar los datos inicialmente
+
+          // Calcular promedios si hay datos
+          if (data.length > 0) {
+            this.averageCompletionRate = data.reduce((sum, item) => sum + item.completedPercentage, 0) / data.length;
+
+            // ✅ CALCULAR PROMEDIO DE TIEMPO USANDO LOS SEGUNDOS
+            const totalSeconds = data.reduce((sum, item) => sum + (item.averageTimeInSeconds || 0), 0);
+            const averageSeconds = totalSeconds / data.length;
+            this.averageTimeFormatted = this.formatDuration(averageSeconds);
+          } else {
+            this.averageCompletionRate = 0;
+            this.averageTimeFormatted = 'Sin datos';
+          }
+
           this.loading = false;
         },
         error: (error) => {
@@ -51,55 +64,28 @@ export class ProviderReportComponent implements OnInit, OnChanges {
     }
   }
 
-  // Métodos para ordenar los datos
-  sortBy(field: keyof ProviderStat): void {
-    if (this.sortField === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDirection = 'desc'; // Por defecto descendente
+  // ✅ MÉTODO PARA FORMATEAR DURACIÓN
+  formatDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) {
+      return 'Sin datos';
     }
 
-    this.sortData();
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    let result = '';
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0) result += `${minutes}m `;
+    if (secs > 0 && hours === 0) result += `${secs}s`;
+
+    return result.trim() || '< 1s';
   }
 
-  sortData(): void {
-    this.providerStats.sort((a, b) => {
-      // Obtener los valores a comparar
-      const valueA = a[this.sortField];
-      const valueB = b[this.sortField];
-
-      // Comparar según el tipo de datos
-      let comparison = 0;
-      if (typeof valueA === 'number' && typeof valueB === 'number') {
-        comparison = valueA - valueB;
-      } else if (typeof valueA === 'string' && typeof valueB === 'string') {
-        comparison = valueA.localeCompare(valueB);
-      }
-
-      // Aplicar dirección del ordenamiento
-      return this.sortDirection === 'asc' ? comparison : -comparison;
-    });
-  }
-
-  // Método para formatear tiempo (minutos a horas:minutos)
-  formatTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  }
-
-  // Método para determinar la clase de color según el porcentaje
-  getPercentageColorClass(percentage: number): string {
+  // Método para determinar la clase de color según el porcentaje de completado
+  getCompletionColorClass(percentage: number): string {
     if (percentage < 70) return 'text-red-500';
-    if (percentage < 85) return 'text-yellow-500';
-    return 'text-green-500';
-  }
-
-  // Método para determinar la clase de color según el tiempo promedio
-  getTimeColorClass(minutes: number): string {
-    if (minutes > 120) return 'text-red-500';
-    if (minutes > 90) return 'text-yellow-500';
+    if (percentage < 90) return 'text-yellow-500';
     return 'text-green-500';
   }
 }

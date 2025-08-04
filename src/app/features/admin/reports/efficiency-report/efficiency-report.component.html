@@ -1,153 +1,93 @@
 <!-- src/app/features/admin/reports/efficiency-report/efficiency-report.component.html -->
-<div class="space-y-6">
-    <!-- Loader -->
-    <div *ngIf="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500"></div>
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Eficiencia por Andén</h3>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando estadísticas...</span>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading">
+    <!-- Resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-blue-600 mb-1">Utilización Promedio</h4>
+        <p class="text-2xl font-bold text-blue-700">{{ averageUtilization | number:'1.1-1' }}%</p>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-green-600 mb-1">Tiempo Promedio</h4>
+        <!-- ✅ USAR EL NUEVO FORMATO -->
+        <p class="text-2xl font-bold text-green-700">{{ averageTimeFormatted }}</p>
+      </div>
     </div>
 
-    <div *ngIf="!loading">
-      <!-- Resumen de estadísticas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <!-- Utilización promedio -->
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 rounded-md bg-blue-100 p-3">
-              <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-900">Utilización Promedio</h3>
-              <p class="text-2xl font-semibold text-gray-700">{{ averageUtilization | number:'1.0-1' }}%</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tiempo promedio por reserva -->
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 rounded-md bg-purple-100 p-3">
-              <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-900">Tiempo Promedio por Reserva</h3>
-              <p class="text-2xl font-semibold text-gray-700">{{ formatTime(averageTimePerReservation) }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabla de eficiencia por andén -->
-      <div class="mb-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-3">Eficiencia por Andén</h2>
-        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Andén
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Área
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Utilización
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tiempo Promedio
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Reservas
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Gráfico
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr *ngFor="let stat of efficiencyStats">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    Andén {{ stat.andenNumber }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ stat.areaName }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm" [ngClass]="getUtilizationColorClass(stat.utilizationPercentage)">
-                    {{ stat.utilizationPercentage | number:'1.0-1' }}%
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ formatTime(stat.averageTimePerReservation) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ stat.reservationsCount }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        class="h-2.5 rounded-full"
-                        [ngStyle]="{width: stat.utilizationPercentage + '%'}"
-                        [ngClass]="{
-                          'bg-red-500': stat.utilizationPercentage < 30,
-                          'bg-yellow-500': stat.utilizationPercentage >= 30 && stat.utilizationPercentage < 60,
-                          'bg-green-500': stat.utilizationPercentage >= 60
-                        }"
-                      ></div>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="efficiencyStats.length === 0">
-                  <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                    No hay datos disponibles para el período seleccionado.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recomendaciones -->
-      <div *ngIf="efficiencyStats.length > 0" class="mb-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-3">Recomendaciones</h2>
-        <div class="bg-white border border-gray-200 rounded-lg p-4">
-          <ul class="space-y-2">
-            <li *ngFor="let stat of efficiencyStats">
-              <div *ngIf="stat.utilizationPercentage < 30" class="flex items-start">
-                <div class="flex-shrink-0 mt-0.5">
-                  <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                  </svg>
+    <!-- Tabla de datos -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Andén
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Área
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Utilización
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Tiempo Promedio
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total Reservas
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Gráfico
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let stat of efficiencyStats" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              Andén {{ stat.andenNumber }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+              {{ stat.areaName }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                [ngClass]="getUtilizationColorClass(stat.utilizationPercentage)">
+              {{ stat.utilizationPercentage | number:'1.1-1' }}%
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <!-- ✅ MOSTRAR EL FORMATO LEGIBLE DIRECTAMENTE -->
+              {{ stat.averageTimePerReservation }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ stat.reservationsCount }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <!-- Barra de progreso visual -->
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="h-2 rounded-full"
+                     [ngClass]="{
+                       'bg-red-500': stat.utilizationPercentage < 30,
+                       'bg-yellow-500': stat.utilizationPercentage >= 30 && stat.utilizationPercentage < 60,
+                       'bg-green-500': stat.utilizationPercentage >= 60
+                     }"
+                     [style.width.%]="stat.utilizationPercentage">
                 </div>
-                <p class="ml-2 text-sm text-gray-700">
-                  <span class="font-medium">Andén {{ stat.andenNumber }} ({{ stat.areaName }})</span>: Baja utilización ({{ stat.utilizationPercentage | number:'1.0-1' }}%). Considerar reasignar recursos o revisar la capacidad.
-                </p>
               </div>
-              <div *ngIf="stat.utilizationPercentage > 80" class="flex items-start">
-                <div class="flex-shrink-0 mt-0.5">
-                  <svg class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <p class="ml-2 text-sm text-gray-700">
-                  <span class="font-medium">Andén {{ stat.andenNumber }} ({{ stat.areaName }})</span>: Alta utilización ({{ stat.utilizationPercentage | number:'1.0-1' }}%). Considerar aumentar capacidad o balancear la carga.
-                </p>
-              </div>
-            </li>
-            <li *ngIf="averageTimePerReservation > 120" class="flex items-start">
-              <div class="flex-shrink-0 mt-0.5">
-                <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <p class="ml-2 text-sm text-gray-700">
-                El tiempo promedio por reserva ({{ formatTime(averageTimePerReservation) }}) es superior a 2 horas. Considerar optimizar los procesos de carga/descarga.
-              </p>
-            </li>
-          </ul>
-        </div>
-      </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="efficiencyStats.length === 0" class="text-center py-8">
+      <p class="text-gray-500">No hay datos de eficiencia para el período seleccionado</p>
     </div>
   </div>
+</div>

@@ -1,4 +1,4 @@
-// src/app/features/admin/reports/report-dashboard.component.ts
+// src/app/features/admin/reports/report-dashboard.component.ts - ACTUALIZADO
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -38,14 +38,24 @@ export class ReportDashboardComponent implements OnInit {
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
     this.startDate = lastMonth.toISOString().split('T')[0];
+
+    console.log('📅 Fechas inicializadas:', { startDate: this.startDate, endDate: this.endDate });
   }
 
   setActiveTab(tabName: string): void {
     this.activeTab = tabName;
+    console.log('🔄 Cambiando a pestaña:', tabName);
   }
 
-  // Método para exportar datos según el tipo de reporte
+  // ✅ MÉTODO ACTUALIZADO para manejar la exportación
   exportData(format: 'pdf' | 'excel'): void {
+    console.log('📤 Intentando exportar:', { format, tab: this.activeTab });
+
+    // Por ahora mostrar un mensaje de que no está disponible
+    alert(`La exportación en formato ${format.toUpperCase()} estará disponible próximamente.`);
+
+    /*
+    // ✅ CÓDIGO PARA CUANDO EL BACKEND SOPORTE EXPORTACIÓN
     this.loading = true;
 
     this.reportService.exportReport(
@@ -78,8 +88,9 @@ export class ReportDashboardComponent implements OnInit {
       error: (error) => {
         console.error('Error al exportar el reporte', error);
         this.loading = false;
-        alert('Error al exportar el reporte. Intente nuevamente.');
+        alert('La funcionalidad de exportación no está disponible en este momento.');
       }
     });
+    */
   }
 }

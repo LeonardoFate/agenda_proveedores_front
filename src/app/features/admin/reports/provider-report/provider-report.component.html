@@ -1,129 +1,92 @@
 <!-- src/app/features/admin/reports/provider-report/provider-report.component.html -->
-<div class="space-y-6">
-    <!-- Loader -->
-    <div *ngIf="loading" class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500"></div>
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">🏢 Estadísticas de Proveedores</h3>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando estadísticas...</span>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading">
+    <!-- Resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-blue-600 mb-1">Tasa de Completado Promedio</h4>
+        <p class="text-2xl font-bold text-blue-700">{{ averageCompletionRate | number:'1.1-1' }}%</p>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-green-600 mb-1">Tiempo Promedio</h4>
+        <!-- ✅ USAR EL NUEVO FORMATO -->
+        <p class="text-2xl font-bold text-green-700">{{ averageTimeFormatted }}</p>
+      </div>
     </div>
 
-    <div *ngIf="!loading">
-      <!-- Tabla de proveedores -->
-      <div class="mb-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-3">Actividad de Proveedores</h2>
-        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    (click)="sortBy('providerName')"
-                  >
-                    Proveedor
-                    <span *ngIf="sortField === 'providerName'" class="ml-1">
-                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    (click)="sortBy('reservationsCount')"
-                  >
-                    Total Reservas
-                    <span *ngIf="sortField === 'reservationsCount'" class="ml-1">
-                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    (click)="sortBy('completedPercentage')"
-                  >
-                    % Completadas
-                    <span *ngIf="sortField === 'completedPercentage'" class="ml-1">
-                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    (click)="sortBy('averageTimeInMinutes')"
-                  >
-                    Tiempo Promedio
-                    <span *ngIf="sortField === 'averageTimeInMinutes'" class="ml-1">
-                      {{ sortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Análisis
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr *ngFor="let provider of providerStats">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {{ provider.providerName }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ provider.reservationsCount }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm" [ngClass]="getPercentageColorClass(provider.completedPercentage)">
-                    {{ provider.completedPercentage | number:'1.0-1' }}%
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm" [ngClass]="getTimeColorClass(provider.averageTimeInMinutes)">
-                    {{ formatTime(provider.averageTimeInMinutes) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <div class="flex items-center">
-                      <div class="w-3 h-3 rounded-full mr-2"
-                        [ngClass]="{
-                          'bg-green-500': provider.completedPercentage >= 85 && provider.averageTimeInMinutes <= 90,
-                          'bg-yellow-500': (provider.completedPercentage >= 70 && provider.completedPercentage < 85) ||
-                                          (provider.averageTimeInMinutes > 90 && provider.averageTimeInMinutes <= 120),
-                          'bg-red-500': provider.completedPercentage < 70 || provider.averageTimeInMinutes > 120
-                        }"
-                      ></div>
-                      <span class="text-gray-700">
-                        {{ provider.completedPercentage >= 85 && provider.averageTimeInMinutes <= 90 ? 'Excelente' :
-                           (provider.completedPercentage >= 70 && provider.averageTimeInMinutes <= 120) ? 'Bueno' : 'Necesita mejorar' }}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="providerStats.length === 0">
-                  <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                    No hay datos disponibles para el período seleccionado.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Proveedores destacados -->
-      <div *ngIf="providerStats.length > 0" class="mb-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-3">Proveedores Destacados</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Mejor proveedor (ordenado por tasa de completación y tiempo) -->
-          <div class="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 class="text-base font-medium text-gray-900 mb-2">Mayor Eficiencia</h3>
-            <div *ngIf="providerStats[0] as bestProvider">
-              <div class="flex items-center mb-2">
-                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
+    <!-- Tabla de datos -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Proveedor
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total Reservas
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              % Completadas
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Tiempo Promedio
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let provider of providerStats" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              {{ provider.providerName }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ provider.reservationsCount }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                [ngClass]="getCompletionColorClass(provider.completedPercentage)">
+              {{ provider.completedPercentage | number:'1.1-1' }}%
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <!-- ✅ USAR averageTime EN LUGAR DE averageTimeInMinutes -->
+              {{ provider.averageTime }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <!-- Indicador visual del estado -->
+              <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full mr-2"
+                     [ngClass]="{
+                       'bg-green-500': provider.completedPercentage >= 85,
+                       'bg-yellow-500': provider.completedPercentage >= 70 && provider.completedPercentage < 85,
+                       'bg-red-500': provider.completedPercentage < 70
+                     }">
                 </div>
-                <div class="ml-3">
-                  <div class="text-sm font-medium text-gray-900">{{ bestProvider.providerName }}</div>
-                  <div class="text-sm text-gray-500">{{ bestProvider.reservationsCount }} reservas</div>
-                </div>
+                <span class="text-gray-700">
+                  <!-- ✅ ELIMINAR TODAS LAS REFERENCIAS A averageTimeInMinutes -->
+                  <span *ngIf="provider.completedPercentage >= 85" class="text-green-600">Excelente</span>
+                  <span *ngIf="provider.completedPercentage >= 70 && provider.completedPercentage < 85" class="text-yellow-600">Bueno</span>
+                  <span *ngIf="provider.completedPercentage < 70" class="text-red-600">Necesita mejora</span>
+                </span>
               </div>
-              <div class="px-4 py-2 bg-gray-50 rounded-md">
-                <div class="flex justify-between mb-1">
-                  <div class="text-xs text-gray-500">Tasa de completación</div>
-                  <div class="text-xs font-medium text-green-600">{{ bestProvider.completedPercentage | number:'1.0-1' }}%</div>
-                </div>
-                <div class="flex justify-between">
-                  <div class="text-xs text-gray-500">Tiempo promedio</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="providerStats.length === 0" class="text-center py-8">
+      <p class="text-gray-500">No hay datos de proveedores para el período seleccionado</p>
+    </div>
+  </div>
+</div>

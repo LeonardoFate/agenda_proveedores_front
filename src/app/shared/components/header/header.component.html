@@ -139,14 +139,14 @@
                   <div class="font-medium">{{ currentUser.username }}</div>
                   <div class="text-gray-500">{{ getRoleName(currentUser.rol) }}</div>
                 </div>
-                <a
+                <!-- <a
                   [routerLink]="'/profile'"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                   (click)="closeMenus()"
                 >
                   Mi Perfil
-                </a>
+                </a> -->
                 <button
                   (click)="logout()"
                   class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -316,13 +316,13 @@
           </div>
         </div>
         <div class="mt-3 space-y-1">
-          <a
+          <!-- <a
             routerLink="/profile"
             class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
             (click)="closeMenus()"
           >
             Mi Perfil
-          </a>
+          </a> -->
           <button
             (click)="logout()"
             class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"

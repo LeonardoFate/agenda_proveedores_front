@@ -18,7 +18,7 @@ export class EfficiencyReportComponent implements OnInit, OnChanges {
 
   // Valores promedio calculados
   averageUtilization: number = 0;
-  averageTimePerReservation: number = 0;
+  averageTimeFormatted: string = 'Sin datos'; // ✅ Cambiar a string
 
   constructor(private reportService: ReportService) {}
 
@@ -44,7 +44,14 @@ export class EfficiencyReportComponent implements OnInit, OnChanges {
           // Calcular promedios si hay datos
           if (data.length > 0) {
             this.averageUtilization = data.reduce((sum, item) => sum + item.utilizationPercentage, 0) / data.length;
-            this.averageTimePerReservation = data.reduce((sum, item) => sum + item.averageTimePerReservation, 0) / data.length;
+
+            // ✅ CALCULAR PROMEDIO DE TIEMPO USANDO LOS SEGUNDOS
+            const totalSeconds = data.reduce((sum, item) => sum + (item.averageTimeInSeconds || 0), 0);
+            const averageSeconds = totalSeconds / data.length;
+            this.averageTimeFormatted = this.formatDuration(averageSeconds);
+          } else {
+            this.averageUtilization = 0;
+            this.averageTimeFormatted = 'Sin datos';
           }
 
           this.loading = false;
@@ -57,12 +64,30 @@ export class EfficiencyReportComponent implements OnInit, OnChanges {
     }
   }
 
-  // Método para formatear tiempo (minutos a horas:minutos)
-  formatTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
+  // ✅ MÉTODO PARA FORMATEAR DURACIÓN (SIMILAR AL BACKEND)
+  formatDuration(seconds: number): string {
+    if (!seconds || seconds <= 0) {
+      return 'Sin datos';
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    let result = '';
+    if (hours > 0) result += `${hours}h `;
+    if (minutes > 0) result += `${minutes}m `;
+    if (secs > 0 && hours === 0) result += `${secs}s`;
+
+    return result.trim() || '< 1s';
   }
+
+  // ✅ MÉTODO OBSOLETO - YA NO SE NECESITA
+  // formatTime(minutes: number): string {
+  //   const hours = Math.floor(minutes / 60);
+  //   const mins = minutes % 60;
+  //   return `${hours}h ${mins}m`;
+  // }
 
   // Método para determinar la clase de color según el porcentaje de utilización
   getUtilizationColorClass(percentage: number): string {
