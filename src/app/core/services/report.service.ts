@@ -1,8 +1,8 @@
 // src/app/core/services/report.service.ts - COMPLETAMENTE CORREGIDO
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, forkJoin, of, throwError  } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ReservationStat {
@@ -23,16 +23,16 @@ export interface ProviderStat {
   providerName: string;
   reservationsCount: number;
   completedPercentage: number;
-  averageTime: string;        // ✅ Formato legible del backend
-  averageTimeInSeconds: number; // ✅ Para cálculos
+  averageTime: string;     
+  averageTimeInSeconds: number; 
 }
 
 export interface EfficiencyStat {
   andenNumber: number;
   areaName: string;
   utilizationPercentage: number;
-  averageTimePerReservation: string; // ✅ Formato legible del backend
-  averageTimeInSeconds: number;      // ✅ Para cálculos
+  averageTimePerReservation: string; 
+  averageTimeInSeconds: number;      
   reservationsCount: number;
 }
 
@@ -73,11 +73,11 @@ export class ReportService {
 
     return this.http.get<ReservationStat[]>(`${this.apiUrl}/reservations`, { params }).pipe(
       map(data => {
-        console.log('📊 Estadísticas de reservas obtenidas:', data);
+        console.log('Estadísticas de reservas obtenidas:', data);
         return data;
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo estadísticas de reservas:', error);
+        console.error('Error obteniendo estadísticas de reservas:', error);
         // Fallback al método alternativo si el endpoint no existe
         return this.getReservationStatsLegacy(startDate, endDate);
       })
@@ -86,7 +86,7 @@ export class ReportService {
 
   // Obtener estadísticas por área
   getAreaStats(startDate: string, endDate: string): Observable<AreaStat[]> {
-    console.log('🔍 Obteniendo estadísticas por área:', { startDate, endDate });
+    console.log('Obteniendo estadísticas por área:', { startDate, endDate });
 
     let params = new HttpParams()
       .set('startDate', startDate)
@@ -94,11 +94,11 @@ export class ReportService {
 
     return this.http.get<AreaStat[]>(`${this.apiUrl}/areas`, { params }).pipe(
       map(data => {
-        console.log('📊 Estadísticas por área obtenidas:', data);
+        console.log('Estadísticas por área obtenidas:', data);
         return data;
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo estadísticas por área:', error);
+        console.error('Error obteniendo estadísticas por área:', error);
         // Fallback al método alternativo
         return this.getAreaStatsLegacy(startDate, endDate);
       })
@@ -107,7 +107,7 @@ export class ReportService {
 
   // Obtener estadísticas de eficiencia de andenes
   getEfficiencyStats(startDate: string, endDate: string): Observable<EfficiencyStat[]> {
-    console.log('🔍 Obteniendo estadísticas de eficiencia:', { startDate, endDate });
+    console.log('Obteniendo estadísticas de eficiencia:', { startDate, endDate });
 
     let params = new HttpParams()
       .set('startDate', startDate)
@@ -119,7 +119,7 @@ export class ReportService {
         return data;
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo estadísticas de eficiencia:', error);
+        console.error('Error obteniendo estadísticas de eficiencia:', error);
         // Fallback al método alternativo
         return this.getEfficiencyStatsLegacy(startDate, endDate);
       })
@@ -128,7 +128,7 @@ export class ReportService {
 
   // Obtener estadísticas de proveedores
   getProviderStats(startDate: string, endDate: string): Observable<ProviderStat[]> {
-    console.log('🔍 Obteniendo estadísticas de proveedores:', { startDate, endDate });
+    console.log('Obteniendo estadísticas de proveedores:', { startDate, endDate });
 
     let params = new HttpParams()
       .set('startDate', startDate)
@@ -136,11 +136,11 @@ export class ReportService {
 
     return this.http.get<ProviderStat[]>(`${this.apiUrl}/providers`, { params }).pipe(
       map(data => {
-        console.log('📊 Estadísticas de proveedores obtenidas:', data);
+        console.log('Estadísticas de proveedores obtenidas:', data);
         return data;
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo estadísticas de proveedores:', error);
+        console.error('Error obteniendo estadísticas de proveedores:', error);
         // Fallback al método alternativo
         return this.getProviderStatsLegacy(startDate, endDate);
       })
@@ -149,7 +149,7 @@ export class ReportService {
 
   // Obtener resumen general
   getReportSummary(startDate: string, endDate: string): Observable<ReportSummary> {
-    console.log('🔍 Obteniendo resumen general:', { startDate, endDate });
+    console.log('Obteniendo resumen general:', { startDate, endDate });
 
     let params = new HttpParams()
       .set('startDate', startDate)
@@ -157,11 +157,11 @@ export class ReportService {
 
     return this.http.get<ReportSummary>(`${this.apiUrl}/summary`, { params }).pipe(
       map(data => {
-        console.log('📊 Resumen general obtenido:', data);
+        console.log('Resumen general obtenido:', data);
         return data;
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo resumen general:', error);
+        console.error('Error obteniendo resumen general:', error);
         // Fallback al método alternativo
         return this.getReportSummaryLegacy(startDate, endDate);
       })
@@ -171,27 +171,27 @@ export class ReportService {
   // ===== MÉTODOS LEGACY (FALLBACK) =====
 
   private getReservationStatsLegacy(startDate: string, endDate: string): Observable<ReservationStat[]> {
-    console.log('🔄 Usando método legacy para estadísticas de reservas');
+    console.log('Usando método legacy para estadísticas de reservas');
     return this.getReservasForPeriod(startDate, endDate).pipe(
       map(reservas => {
-        console.log('📊 Reservas obtenidas para reportes:', reservas);
+        console.log('Reservas obtenidas para reportes:', reservas);
         return this.processReservationStats(reservas, startDate, endDate);
       }),
       catchError(error => {
-        console.error('❌ Error obteniendo estadísticas de reservas:', error);
+        console.error('Error obteniendo estadísticas de reservas:', error);
         return of([]);
       })
     );
   }
 
   private getAreaStatsLegacy(startDate: string, endDate: string): Observable<AreaStat[]> {
-    console.log('🔄 Usando método legacy para estadísticas por área');
+    console.log('Usando método legacy para estadísticas por área');
     return forkJoin({
       reservas: this.getReservasForPeriod(startDate, endDate),
       areas: this.http.get<any[]>(this.areasUrl)
     }).pipe(
       map(({ reservas, areas }) => {
-        console.log('📊 Datos para estadísticas de área:', { reservas: reservas.length, areas: areas.length });
+        console.log('Datos para estadísticas de área:', { reservas: reservas.length, areas: areas.length });
         return this.processAreaStats(reservas, areas);
       }),
       catchError(error => {
@@ -527,13 +527,25 @@ export class ReportService {
       period: { startDate, endDate }
     };
   }
+exportReport(reportType: string, format: 'pdf' | 'excel', startDate: string, endDate: string): Observable<Blob> {
+  console.log('📤 Exportando reporte:', { reportType, format, startDate, endDate });
 
-  // Exportar reporte a PDF o Excel (placeholder - no implementado en backend)
-  exportReport(reportType: string, format: 'pdf' | 'excel', startDate: string, endDate: string): Observable<any> {
-    console.log('⚠️ Exportación de reportes no implementada en el backend aún');
+  const params = new HttpParams()
+    .set('startDate', startDate)
+    .set('endDate', endDate)
+    .set('reportType', reportType);
 
-    return new Observable(observer => {
-      observer.error(new Error('La funcionalidad de exportación no está disponible en este momento'));
-    });
-  }
+  const endpoint = `${this.apiUrl}/export/${format}`;
+
+  return this.http.get(endpoint, {
+    params,
+    responseType: 'blob'
+  }).pipe(
+    tap(() => console.log('✅ Reporte descargado exitosamente')),
+    catchError(error => {
+      console.error('Error exportando reporte:', error);
+      return throwError(() => error);
+    })
+  );
+}
 }

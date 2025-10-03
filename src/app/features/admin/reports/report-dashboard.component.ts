@@ -47,50 +47,41 @@ export class ReportDashboardComponent implements OnInit {
     console.log('🔄 Cambiando a pestaña:', tabName);
   }
 
-  // ✅ MÉTODO ACTUALIZADO para manejar la exportación
-  exportData(format: 'pdf' | 'excel'): void {
-    console.log('📤 Intentando exportar:', { format, tab: this.activeTab });
+ exportData(format: 'pdf' | 'excel'): void {
+  console.log('📤 Exportando:', { format, tab: this.activeTab });
 
-    // Por ahora mostrar un mensaje de que no está disponible
-    alert(`La exportación en formato ${format.toUpperCase()} estará disponible próximamente.`);
+  this.loading = true;
 
-    /*
-    // ✅ CÓDIGO PARA CUANDO EL BACKEND SOPORTE EXPORTACIÓN
-    this.loading = true;
+  this.reportService.exportReport(
+    this.activeTab,
+    format,
+    this.startDate,
+    this.endDate
+  ).subscribe({
+    next: (blob) => {
+      // ✅ Descargar archivo automáticamente
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte-${this.activeTab}-${this.startDate}-al-${this.endDate}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpiar
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      this.loading = false;
+      
+      // Mostrar mensaje de éxito (opcional)
+      alert(`✅ Reporte descargado exitosamente en formato ${format.toUpperCase()}`);
+    },
+    error: (error) => {
+      console.error('❌ Error al exportar:', error);
+      this.loading = false;
+      alert('❌ Error al descargar el reporte. Intente nuevamente.');
+    }
+  });
+}
 
-    this.reportService.exportReport(
-      this.activeTab,
-      format,
-      this.startDate,
-      this.endDate
-    ).subscribe({
-      next: (response) => {
-        // Crear un blob a partir de la respuesta
-        const blob = new Blob([response], {
-          type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        });
-
-        // Crear URL para el blob
-        const url = window.URL.createObjectURL(blob);
-
-        // Crear enlace para descargar
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `reporte-${this.activeTab}-${this.startDate}-al-${this.endDate}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
-        document.body.appendChild(a);
-        a.click();
-
-        // Limpiar
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al exportar el reporte', error);
-        this.loading = false;
-        alert('La funcionalidad de exportación no está disponible en este momento.');
-      }
-    });
-    */
-  }
 }
