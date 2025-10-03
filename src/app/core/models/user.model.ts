@@ -32,6 +32,7 @@ export interface User {
     ruc: string;
     direccion: string;
     telefono: string;
+      aceptoPoliticaPrivacidad: boolean;
   }
 
   export interface RegisterUserRequest {

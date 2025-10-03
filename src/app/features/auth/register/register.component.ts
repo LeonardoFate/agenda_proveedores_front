@@ -1,13 +1,15 @@
+// src/app/features/auth/register/register.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { PrivacyPolicyModalComponent } from '../privacy-policy-modal/privacy-policy-modal.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PrivacyPolicyModalComponent],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
@@ -16,6 +18,8 @@ export class RegisterComponent {
   errorMessage = '';
   successMessage = '';
   isLoading = false;
+  showPrivacyModal = false;
+  privacyAccepted = false;
 
   constructor(
     private fb: FormBuilder,
@@ -35,13 +39,14 @@ export class RegisterComponent {
       nombreEmpresa: ['', [Validators.required]],
       ruc: ['', [Validators.required, Validators.minLength(10)]],
       direccion: ['', [Validators.required]],
-      telefono: ['', [Validators.required, Validators.pattern(/^\d{7,15}$/)]]
+      telefono: ['', [Validators.required, Validators.pattern(/^\d{7,15}$/)]],
+      
+      aceptoPoliticaPrivacidad: [false, [Validators.requiredTrue]]
     }, {
       validators: this.passwordMatchValidator
     });
   }
 
-  // Validador personalizado para verificar que las contraseñas coincidan
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
@@ -50,8 +55,6 @@ export class RegisterComponent {
       confirmPassword?.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
     } else {
-      // Si las contraseñas coinciden, eliminamos el error específico
-      // pero mantenemos otros errores que pudieran existir
       const errors = confirmPassword?.errors;
       if (errors) {
         delete errors['passwordMismatch'];
@@ -61,13 +64,29 @@ export class RegisterComponent {
     }
   }
 
+  // MÉTODO PARA ABRIR MODAL
+  openPrivacyModal() {
+    this.showPrivacyModal = true;
+  }
+
+  // MÉTODO CUANDO ACEPTA LA POLÍTICA
+  onPrivacyAccepted(accepted: boolean) {
+    this.privacyAccepted = accepted;
+    this.registerForm.patchValue({ aceptoPoliticaPrivacidad: true });
+    this.showPrivacyModal = false;
+  }
+
+  // MÉTODO CUANDO CIERRA EL MODAL
+  onPrivacyModalClosed() {
+    this.showPrivacyModal = false;
+  }
+
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
       this.successMessage = '';
 
-      // Extraer los datos del formulario sin confirmPassword
       const { confirmPassword, ...registrationData } = this.registerForm.value;
 
       this.authService.registerProvider(registrationData).subscribe({
@@ -75,7 +94,6 @@ export class RegisterComponent {
           this.isLoading = false;
           this.successMessage = 'Registro exitoso. Ahora puede iniciar sesión.';
 
-          // Redirigir al login después de un breve retraso
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
@@ -90,12 +108,10 @@ export class RegisterComponent {
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar validaciones
       this.markFormGroupTouched(this.registerForm);
     }
   }
 
-  // Función para marcar todos los controles como tocados
   markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
